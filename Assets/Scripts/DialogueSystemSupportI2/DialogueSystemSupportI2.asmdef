@@ -1,0 +1,8 @@
+{
+  "name": "DialogueSystemSupportI2",
+  "references": [
+    "DialogueSystem",
+    "PixelCrushers"
+  ],
+  "allowUnsafeCode": true
+}

@@ -1,0 +1,8 @@
+{
+  "name": "PageSystem",
+  "references": [
+    "UnityEngine.UI",
+    "DOTween"
+  ],
+  "allowUnsafeCode": true
+}

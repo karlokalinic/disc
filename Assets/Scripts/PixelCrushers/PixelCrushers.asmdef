@@ -1,0 +1,8 @@
+{
+  "name": "PixelCrushers",
+  "references": [
+    "UnityEngine.UI",
+    "Unity.TextMeshPro"
+  ],
+  "allowUnsafeCode": true
+}

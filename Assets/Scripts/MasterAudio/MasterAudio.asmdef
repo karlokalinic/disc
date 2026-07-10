@@ -1,0 +1,7 @@
+{
+  "name": "MasterAudio",
+  "references": [
+    "UnityEngine.UI"
+  ],
+  "allowUnsafeCode": true
+}

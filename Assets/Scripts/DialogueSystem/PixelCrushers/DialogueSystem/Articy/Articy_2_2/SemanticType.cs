@@ -1,0 +1,13 @@
+using System;
+using System.Xml.Serialization;
+
+namespace PixelCrushers.DialogueSystem.Articy.Articy_2_2
+{
+	[Serializable]
+	[XmlType]
+	public enum SemanticType
+	{
+		Input = 0,
+		Output = 1
+	}
+}

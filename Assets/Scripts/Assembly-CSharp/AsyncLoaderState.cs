@@ -1,0 +1,7 @@
+public enum AsyncLoaderState
+{
+	INITIALIZED = 0,
+	FETCHINGBUNDLE = 1,
+	BUNDLELOADED = 2,
+	FETCHINGASSET = 3
+}

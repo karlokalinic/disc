@@ -1,0 +1,7 @@
+{
+  "name": "DotNetZip",
+  "references": [
+    "DiscoGlobals"
+  ],
+  "allowUnsafeCode": true
+}

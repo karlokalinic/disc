@@ -1,0 +1,40 @@
+namespace NotificationSystem
+{
+	public enum NotificationType
+	{
+		None = 0,
+		Success = 5,
+		Failure = 6,
+		TaskGained = 10,
+		TaskUpdated = 11,
+		TaskComplete = 12,
+		SecretTaskComplete = 13,
+		ExpAdded = 15,
+		LevelUp = 16,
+		MoneyAdded = 20,
+		MoneyLost = 21,
+		ThoughtGained = 25,
+		ThoughtComplete = 26,
+		BreakthroughImminent = 27,
+		ThoughtLost = 28,
+		ItemGained = 30,
+		ItemLost = 31,
+		KeyGained = 32,
+		HealedMorale = 35,
+		DamagedMorale = 36,
+		MoraleCritical = 37,
+		HealedHealth = 40,
+		DamagedHealth = 41,
+		HealthCritical = 42,
+		TabTutorial = 45,
+		AutosaveComplete = 50,
+		QuicksaveComplete = 51,
+		ItemHealthGained = 52,
+		ItemMoraleGained = 53,
+		AlcoholEffect = 54,
+		PyrholidonEffect = 55,
+		SmokeEffect = 56,
+		SpeedEffect = 57,
+		QuicktravelEnabled = 58
+	}
+}

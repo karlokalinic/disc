@@ -1,0 +1,10 @@
+{
+  "name": "DialogueSystem",
+  "references": [
+    "PixelCrushers",
+    "ObjectPooler",
+    "UnityEngine.UI",
+    "Unity.TextMeshPro"
+  ],
+  "allowUnsafeCode": true
+}

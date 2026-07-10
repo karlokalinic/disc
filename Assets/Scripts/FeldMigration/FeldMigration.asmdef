@@ -1,0 +1,8 @@
+{
+  "name": "FeldMigration",
+  "references": [
+    "DialogueSystem",
+    "FullSerializer"
+  ],
+  "allowUnsafeCode": true
+}

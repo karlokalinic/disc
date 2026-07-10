@@ -1,0 +1,7 @@
+public enum CharSheetMode
+{
+	CHARACTER_VIEW = 0,
+	CREATION_ABILITIES = 1,
+	CREATION_SKILLS = 2,
+	CREATION_HIDDEN = 3
+}

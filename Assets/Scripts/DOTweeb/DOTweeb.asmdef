@@ -1,0 +1,9 @@
+{
+  "name": "DOTweeb",
+  "references": [
+    "DOTween",
+    "UnityEngine.UI",
+    "Unity.TextMeshPro"
+  ],
+  "allowUnsafeCode": true
+}

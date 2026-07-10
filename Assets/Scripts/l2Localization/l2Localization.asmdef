@@ -1,0 +1,8 @@
+{
+  "name": "l2Localization",
+  "references": [
+    "Unity.TextMeshPro",
+    "UnityEngine.UI"
+  ],
+  "allowUnsafeCode": true
+}

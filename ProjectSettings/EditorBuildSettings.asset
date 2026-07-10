@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/_IntroReal/BootBlank.unity
+    guid: e17a0000000000000000000000000006
+  - enabled: 0
+    path: Assets/_IntroReal/FlowReal.unity
+    guid: e17a0000000000000000000000000005
+  - enabled: 1
+    path: Assets/_IntroReal/IntroReal.unity
+    guid: e17a0000000000000000000000000002
+  - enabled: 1
+    path: Assets/_IntroReal/RoomReal.unity
+    guid: 25a82b1000e6e7b4ea4ccebc2222079c
+  - enabled: 0
+    path: Assets/Scenes/PreInitialize.unity
+    guid: 44f40fc3aa4138d4cb06bf5846acb845
+  - enabled: 0
+    path: Assets/Scenes/Initialize.unity
+    guid: cb90da368f51d5642ab0aa9668633eff
+  - enabled: 0
+    path: Assets/Scenes/Init.unity
+    guid: 764c556f878ef3f45b4e3b98692d275f
+  - enabled: 0
+    path: Assets/Scenes/Lobby.unity
+    guid: 9efb124c552548043838383789b484fe
+  - enabled: 1
+    path: Assets/3DShowcase.unity
+    guid: 3950eb7995d103a4ebfc5e1f9dc0d634
+  - enabled: 1
+    path: Assets/_IntroReal/KlaasjeBalconyReal.unity
+    guid: 2bd93aaac6319a24b9217ff70f85810d
+  - enabled: 1
+    path: Assets/_IntroReal/WhirlingLobbyReal.unity
+    guid: 65118153ec104e74aa3347d4d42a0fd5
+  m_configObjects: {}

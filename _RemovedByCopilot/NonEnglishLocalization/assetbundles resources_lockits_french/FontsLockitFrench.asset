@@ -1,0 +1,145 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8105823db562262e7f7fd73934f4ea3, type: 3}
+  m_Name: FontsLockitFrench
+  m_EditorClassIdentifier:
+  mSource:
+    UserAgreesToHaveItOnTheScene: 0
+    UserAgreesToHaveItInsideThePluginsFolder: 0
+    GoogleLiveSyncIsUptoDate: 1
+    mTerms:
+    - Term: DialogueText-Fader-Material-SDF
+      TermType: 6
+      Languages:
+      - Dialogue UI Fader Material TMPro
+      Flags: 00
+      Languages_Touch: []
+    - Term: DialogueText-New-Material-SDF
+      TermType: 6
+      Languages:
+      - Dialogue UI New Material TMPro
+      Flags: 00
+      Languages_Touch: []
+    - Term: Dobra-Book SDF
+      TermType: 9
+      Languages:
+      - Dobra-Book SDF
+      Flags: 00
+      Languages_Touch: []
+    - Term: Dobra-Light SDF
+      TermType: 9
+      Languages:
+      - Dobra-Light SDF
+      Flags: 00
+      Languages_Touch: []
+    - Term: Dobra-Medium SDF
+      TermType: 9
+      Languages:
+      - Dobra-Medium SDF
+      Flags: 00
+      Languages_Touch: []
+    - Term: GulimChe SDF
+      TermType: 9
+      Languages:
+      - CoreSansES Light SDF
+      Flags: 00
+      Languages_Touch: []
+    - Term: Inverting-Dobra-Medium-Material-SDF
+      TermType: 6
+      Languages:
+      - Dobra-Medium Atlas Inverting
+      Flags: 00
+      Languages_Touch: []
+    - Term: SinaNova-Bold SDF
+      TermType: 9
+      Languages:
+      - SinaNova-Bold SDF
+      Flags: 00
+      Languages_Touch: []
+    - Term: SinaNova-Medium SDF
+      TermType: 9
+      Languages:
+      - SinaNova-Medium SDF
+      Flags: 00
+      Languages_Touch: []
+    - Term: Dobra-Book-HidingText-SDF
+      TermType: 6
+      Languages:
+      - Dobra-Book HidingText
+      Flags: 00
+      Languages_Touch: []
+    - Term: Dobra-Bold SDF
+      TermType: 9
+      Languages:
+      - Dobra-Bold SDF
+      Flags: 00
+      Languages_Touch: []
+    - Term: Dyslexic-Fader-Material-SDF
+      TermType: 6
+      Languages:
+      - Dyslexic Fader Material TMPro
+      Flags: 00
+      Languages_Touch: []
+    - Term: Dyslexic-New-Material-SDF
+      TermType: 6
+      Languages:
+      - Dyslexic New Material TMPro
+      Flags: 00
+      Languages_Touch: []
+    - Term: Dyslexic SDF
+      TermType: 9
+      Languages:
+      - OpenDyslexic3-Regular SDF
+      Flags: 00
+      Languages_Touch: []
+    - Term: Inverting-Dyslexic-Material-SDF
+      TermType: 6
+      Languages:
+      - Dobra-Medium Dyslexic Inverting
+      Flags: 00
+      Languages_Touch: []
+    - Term: Dyslexic-HidingText-SDF
+      TermType: 6
+      Languages:
+      - Dobra-Book Dyslexic HidingText
+      Flags: 00
+      Languages_Touch: []
+    - Term: Collage UI SDF
+      TermType: 9
+      Languages:
+      - Dobra-Medium SDF
+      Flags: 00
+      Languages_Touch: []
+    - Term: Collage Dialogue SDF
+      TermType: 9
+      Languages:
+      - SinaNova-Medium SDF
+      Flags: 00
+      Languages_Touch: []
+    CaseInsensitiveTerms: 0
+    OnMissingTranslation: 1
+    mTerm_AppName:
+    mLanguages:
+    - Name: French
+      Code: fr
+      Flags: 0
+    IgnoreDeviceLanguage: 0
+    _AllowUnloadingLanguages: 0
+    Google_WebServiceURL:
+    Google_SpreadsheetKey:
+    Google_SpreadsheetName:
+    Google_LastUpdatedVersion:
+    GoogleUpdateFrequency: 3
+    GoogleInEditorCheckFrequency: 2
+    GoogleUpdateSynchronization: 1
+    GoogleUpdateDelay: 0
+    Assets: []

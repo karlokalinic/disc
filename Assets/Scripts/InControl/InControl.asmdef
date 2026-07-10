@@ -1,0 +1,7 @@
+{
+  "name": "InControl",
+  "references": [
+    "UnityEngine.UI"
+  ],
+  "allowUnsafeCode": true
+}

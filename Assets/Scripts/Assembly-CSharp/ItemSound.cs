@@ -1,0 +1,19 @@
+public enum ItemSound
+{
+	HARD = 0,
+	MEDIUM = 1,
+	SOFT = 2,
+	BOTTLE = 3,
+	FIGURINE = 4,
+	SUNGLASSES = 5,
+	GUN = 6,
+	KEY = 7,
+	KEYRING = 8,
+	PAPER = 9,
+	BOOK = 10,
+	PLASTIC = 11,
+	METAL = 12,
+	PACKET = 13,
+	PAINTBRUSH = 14,
+	FILAMENTMEMORY = 15
+}

@@ -1,0 +1,103 @@
+using System;
+using System.Diagnostics;
+using System.Xml.Serialization;
+
+namespace PixelCrushers.DialogueSystem.Articy.Articy_1_4
+{
+	[Serializable]
+	[XmlType]
+	[DebuggerStepThrough]
+	public class JourneyPointSettingsType
+	{
+		private BackgroundImageModeType backgroundImageModeField;
+
+		private ReferenceType backgroundImageField;
+
+		private BackgroundImagePositioningModeType backgroundImagePositioningModeField;
+
+		private BackgroundColorModeType backgroundColorModeField;
+
+		private string backgroundColorField;
+
+		private BackgroundColorGradientModeType backgroundColorGradientModeField;
+
+		private int durationField;
+
+		public BackgroundImageModeType BackgroundImageMode
+		{
+			get
+			{
+				return default(BackgroundImageModeType);
+			}
+			set
+			{
+			}
+		}
+
+		public ReferenceType BackgroundImage
+		{
+			get
+			{
+				return null;
+			}
+			set
+			{
+			}
+		}
+
+		public BackgroundImagePositioningModeType BackgroundImagePositioningMode
+		{
+			get
+			{
+				return default(BackgroundImagePositioningModeType);
+			}
+			set
+			{
+			}
+		}
+
+		public BackgroundColorModeType BackgroundColorMode
+		{
+			get
+			{
+				return default(BackgroundColorModeType);
+			}
+			set
+			{
+			}
+		}
+
+		public string BackgroundColor
+		{
+			get
+			{
+				return null;
+			}
+			set
+			{
+			}
+		}
+
+		public BackgroundColorGradientModeType BackgroundColorGradientMode
+		{
+			get
+			{
+				return default(BackgroundColorGradientModeType);
+			}
+			set
+			{
+			}
+		}
+
+		public int Duration
+		{
+			get
+			{
+				return 0;
+			}
+			set
+			{
+			}
+		}
+	}
+}

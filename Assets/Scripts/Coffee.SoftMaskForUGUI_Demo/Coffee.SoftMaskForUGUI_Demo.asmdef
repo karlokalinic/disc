@@ -1,0 +1,8 @@
+{
+  "name": "Coffee.SoftMaskForUGUI_Demo",
+  "references": [
+    "UnityEngine.UI",
+    "Coffee.SoftMaskForUGUI"
+  ],
+  "allowUnsafeCode": true
+}

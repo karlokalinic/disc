@@ -1,0 +1,459 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8105823db562262e7f7fd73934f4ea3, type: 3}
+  m_Name: ImagesLockitPortuguese (Brazil)
+  m_EditorClassIdentifier:
+  mSource:
+    UserAgreesToHaveItOnTheScene: 0
+    UserAgreesToHaveItInsideThePluginsFolder: 0
+    GoogleLiveSyncIsUptoDate: 1
+    mTerms:
+    - Term: ABILITY_BUTTON_RANDOM_IMG
+      TermType: 5
+      Languages:
+      - button_random-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: ARCHETYPE_BUTTON_CONFIRM_IMG
+      TermType: 5
+      Languages:
+      - button_begin-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: ARCHETYPE_BUTTON_CONTINUE_IMG
+      TermType: 5
+      Languages:
+      - continue-tight-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: BUTTON_BACK_IMG
+      TermType: 5
+      Languages:
+      - button_back-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: BUTTON_NEXT_IMG
+      TermType: 5
+      Languages:
+      - button_next-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: CHARSHEET_BUTTON_BEGIN_IMG
+      TermType: 5
+      Languages:
+      - button_begin-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: CHARSHEET_BUTTON_LEVEL_UP_GREY_IMG
+      TermType: 5
+      Languages:
+      - button_level_up_grey-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: CHARSHEET_BUTTON_LEVEL_UP_HIGHLIGHTED_IMG
+      TermType: 5
+      Languages:
+      - button_level_up 1-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: CHARSHEET_BUTTON_LEVEL_UP_IMG
+      TermType: 5
+      Languages:
+      - button_level_up-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: CHARSHEET_BUTTON_LEVEL_UP_PRESSED_IMG
+      TermType: 5
+      Languages:
+      - button_level_up 2-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: CHARSHEET_BUTTON_LEVEL_UP_SELECTED_IMG
+      TermType: 5
+      Languages:
+      - button_level_up 1-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: CHARSHEET_BUTTON_RESET_ALL_IMG
+      TermType: 5
+      Languages:
+      - UISprite
+      Flags: 00
+      Languages_Touch: []
+    - Term: CHARSHEET_BUTTON_REVERT_HIGHLIGHTED_IMG
+      TermType: 5
+      Languages:
+      - button_revert 1-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: CHARSHEET_BUTTON_REVERT_IMG
+      TermType: 5
+      Languages:
+      - button_revert-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: CHARSHEET_BUTTON_REVERT_SELECTED_IMG
+      TermType: 5
+      Languages:
+      - button_revert 1-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: CHARSHEET_BUTTON_ROLL_IMG
+      TermType: 5
+      Languages:
+      - UISprite
+      Flags: 00
+      Languages_Touch: []
+    - Term: CHARSHEET_BUTTON_SIGNATURE_IMG
+      TermType: 5
+      Languages:
+      - button_signature_skill-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: CHARSHEET_BUTTON_SUBMIT_HIGHLIGHTED_IMG
+      TermType: 5
+      Languages:
+      - button-accept_and_close-highlighted-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: CHARSHEET_BUTTON_SUBMIT_IMG
+      TermType: 5
+      Languages:
+      - button-accept_and_close-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: CONFIRMATION_BUTTON_CANCEL_IMG
+      TermType: 5
+      Languages:
+      - button_cancel-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: CONFIRMATION_BUTTON_CONFIRM_IMG
+      TermType: 5
+      Languages:
+      - button_confirm-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: CONTAINER_TAKE_ALL_IMG
+      TermType: 5
+      Languages:
+      - container_back-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: DIALOGUE_BUTTON_BEGIN
+      TermType: 5
+      Languages:
+      - button-begin-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: DIALOGUE_BUTTON_CONTINUE_DISABLED_IMG
+      TermType: 5
+      Languages:
+      - button-cont-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: DIALOGUE_BUTTON_CONTINUE_END_CONVERSATION_HIGHLIGHTED_IMG
+      TermType: 5
+      Languages:
+      - button-end-highlighted-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: DIALOGUE_BUTTON_CONTINUE_END_CONVERSATION_IMG
+      TermType: 5
+      Languages:
+      - button-end-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: DIALOGUE_BUTTON_CONTINUE_FYS_IMG
+      TermType: 5
+      Languages:
+      - button-cont-fys-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: DIALOGUE_BUTTON_CONTINUE_HAZY_IMG
+      TermType: 5
+      Languages:
+      - button-cont-hazy-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: DIALOGUE_BUTTON_CONTINUE_IMG
+      TermType: 5
+      Languages:
+      - button-cont-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: DIALOGUE_BUTTON_CONTINUE_INT_IMG
+      TermType: 5
+      Languages:
+      - button-cont-int-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: DIALOGUE_BUTTON_CONTINUE_LEDGER_DREAM_IMG
+      TermType: 5
+      Languages:
+      - button-clear
+      Flags: 00
+      Languages_Touch: []
+    - Term: DIALOGUE_BUTTON_CONTINUE_MOT_IMG
+      TermType: 5
+      Languages:
+      - button-cont-mot-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: DIALOGUE_BUTTON_CONTINUE_PSY_IMG
+      TermType: 5
+      Languages:
+      - button-cont-psy-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: DIALOGUE_BUTTON_CONTINUE_SPECIAL_END_CONVERSATION_IMG
+      TermType: 5
+      Languages:
+      - button-end-special-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: DIALOGUE_BUTTON_CONTINUE_TUTORIAL_IMG
+      TermType: 5
+      Languages:
+      - button-clear
+      Flags: 00
+      Languages_Touch: []
+    - Term: F1_SCREEN_IMG
+      TermType: 5
+      Languages:
+      - F1Screen_wide-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: FURIES_QUOTE_IMG
+      TermType: 5
+      Languages:
+      - furies-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: INVENTORY_EQUIPMENT_HEADER_IMG
+      TermType: 5
+      Languages:
+      - INV_equipped-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: JOURNAL_MAP_CHURCH_IMG
+      TermType: 5
+      Languages:
+      - label_church-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: JOURNAL_MAP_FISHERMAN_IMG
+      TermType: 5
+      Languages:
+      - label_shacks-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: JOURNAL_MAP_LABEL_IMG
+      TermType: 5
+      Languages:
+      - map_label-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: JOURNAL_MAP_WATERFRONT_IMG
+      TermType: 5
+      Languages:
+      - label_waterfront-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: LOAD_SCREEN_PANEL_IMG
+      TermType: 5
+      Languages:
+      - loading-panel-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: PAWNSHOP_BUTTON_CLOSE_IMG
+      TermType: 5
+      Languages:
+      - 
+      Flags: 00
+      Languages_Touch: []
+    - Term: SAVELOAD_BUTTON_DELETE_IMG
+      TermType: 5
+      Languages:
+      - 
+      Flags: 00
+      Languages_Touch: []
+    - Term: SAVELOAD_BUTTON_LOAD_IMG
+      TermType: 5
+      Languages:
+      - button-load-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: SAVELOAD_BUTTON_SAVE_IMG
+      TermType: 5
+      Languages:
+      - button-save-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: SAVE_SCREEN_PANEL_IMG
+      TermType: 5
+      Languages:
+      - saving-panel-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: SETTINGS_BUTTON_CONTROLS_IMG
+      TermType: 5
+      Languages:
+      - 
+      Flags: 00
+      Languages_Touch: []
+    - Term: SETTINGS_BUTTON_RESET_SETTINGS_IMG
+      TermType: 5
+      Languages:
+      - button-reset-settings-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: SETTINGS_BUTTON_RESET_TUTORIAL_IMG
+      TermType: 5
+      Languages:
+      - button-reset-tuto-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: SETTINGS_BUTTON_SETTINGS_IMG
+      TermType: 5
+      Languages:
+      - 
+      Flags: 00
+      Languages_Touch: []
+    - Term: THC_BUTTON_A-Z_IMG
+      TermType: 5
+      Languages:
+      - 
+      Flags: 00
+      Languages_Touch: []
+    - Term: THC_BUTTON_CANCEL_IMG
+      TermType: 5
+      Languages:
+      - button_stop-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: THC_BUTTON_DATE_IMG
+      TermType: 5
+      Languages:
+      - 
+      Flags: 00
+      Languages_Touch: []
+    - Term: THC_BUTTON_FORGET_GREY_IMG
+      TermType: 5
+      Languages:
+      - button_forget_grey-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: THC_BUTTON_FORGET_IMG
+      TermType: 5
+      Languages:
+      - button_forget-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: THC_BUTTON_INTERNALIZE_GREY_IMG
+      TermType: 5
+      Languages:
+      - button_internalize_grey-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: THC_BUTTON_INTERNALIZE_IMG
+      TermType: 5
+      Languages:
+      - button_internalize-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: THC_BUTTON_PROBLEM_IMG
+      TermType: 5
+      Languages:
+      - 
+      Flags: 00
+      Languages_Touch: []
+    - Term: THC_BUTTON_SOLUTION_IMG
+      TermType: 5
+      Languages:
+      - 
+      Flags: 00
+      Languages_Touch: []
+    - Term: THC_BUTTON_STATUS_IMG
+      TermType: 5
+      Languages:
+      - 
+      Flags: 00
+      Languages_Touch: []
+    - Term: THC_BUTTON_UNLOCK_GREY_IMG
+      TermType: 5
+      Languages:
+      - button_unlock_grey-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: THC_BUTTON_UNLOCK_IMG
+      TermType: 5
+      Languages:
+      - button_unlock-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: THC_SPLASH_BUTTON_ACCEPT_IMG
+      TermType: 5
+      Languages:
+      - button-accept-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: VISCAL_FENCECRASH_IMG
+      TermType: 5
+      Languages:
+      - viscal-fencecrash-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: VISCAL_FOOTPRINTS_8PAIRS_IMG
+      TermType: 5
+      Languages:
+      - viscal-footprints-label_8PAIRS-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: VISCAL_FOOTPRINTS_IMG
+      TermType: 5
+      Languages:
+      - viscal-footprintsl-label-FOOTPRINTS-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: VISCAL_NEST_IMG
+      TermType: 5
+      Languages:
+      - viscal-nest-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    - Term: VISCAL_SAMARAN_IMG
+      TermType: 5
+      Languages:
+      - viscal-samaran-pt-BR
+      Flags: 00
+      Languages_Touch: []
+    CaseInsensitiveTerms: 0
+    OnMissingTranslation: 1
+    mTerm_AppName:
+    mLanguages:
+    - Name: Portuguese (Brazil)
+      Code: pt-BR
+      Flags: 0
+    IgnoreDeviceLanguage: 0
+    _AllowUnloadingLanguages: 0
+    Google_WebServiceURL:
+    Google_SpreadsheetKey:
+    Google_SpreadsheetName:
+    Google_LastUpdatedVersion:
+    GoogleUpdateFrequency: 3
+    GoogleInEditorCheckFrequency: 2
+    GoogleUpdateSynchronization: 1
+    GoogleUpdateDelay: 0
+    Assets:
+    - {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - {fileID: 21300000, guid: b87362ad2b05c2b4d8d0e9a9a027519d, type: 2}

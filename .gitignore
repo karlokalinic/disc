@@ -1,0 +1,62 @@
+# Unity generated folders
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+.vs/
+.vscode/
+.plastic/
+
+# IDE/generated project files
+*.csproj
+*.sln
+*.slnx
+*.pidb
+*.booproj
+*.svd
+*.user
+*.userprefs
+*.tmp
+*.bak
+*.log
+
+# Unity crash/build artifacts
+sysinfo.txt
+*.stackdump
+
+# Keep the repository source-first. The extracted commercial assets remain local.
+Assets/**
+
+# Let Git descend into Assets, but only track source/config and recreated scenes.
+!Assets/
+!Assets/**/
+!Assets/**/*.cs
+!Assets/**/*.cs.meta
+!Assets/**/*.asmdef
+!Assets/**/*.asmdef.meta
+!Assets/**/*.asmref
+!Assets/**/*.asmref.meta
+!Assets/_IntroReal/**/*.controller
+!Assets/_IntroReal/**/*.controller.meta
+!Assets/_IntroReal/**/*.unity
+!Assets/_IntroReal/**/*.unity.meta
+!Assets/csc.rsp
+!Assets/csc.rsp.meta
+
+# Local recovery diagnostics and screenshots.
+*.png
+*_report.txt
+*_result.txt
+*_validation.txt
+official_*.txt
+recovered_*.txt
+repair_*.txt
+room_*.txt
+klaasje_*.txt
+lobby_*.txt
+!Packages/*.json
+!ProjectSettings/*.asset
+!ProjectSettings/*.txt

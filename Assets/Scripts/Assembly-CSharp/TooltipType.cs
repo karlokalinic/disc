@@ -1,0 +1,10 @@
+public enum TooltipType
+{
+	GENERIC = 0,
+	CHECK = 1,
+	CHARACTER_SHEET = 2,
+	INVENTORY_THC = 3,
+	COSTOPTION = 4,
+	NONE = 5,
+	BUYOPTION = 6
+}
