@@ -39,6 +39,7 @@ public class RootWorldController : MonoBehaviour
     bool _dialogueOpen;
     bool _mapOpen;
     bool _databaseReady;
+    bool _twoDimensionalStage;
     string _speaker = "";
     string _line = "";
     string _hint = "Click the floor to walk. Hold Shift to run. Click Kim or Klaasje to talk. Press M for the world map.";
@@ -57,6 +58,7 @@ public class RootWorldController : MonoBehaviour
     const float RunSpeed = 5.6f;
     const float ArriveDistance = 0.18f;
     const float TalkDistance = 2.25f;
+    const float StageZ = -1.2f;
 
     [System.Serializable]
     class CustomDialogueBook
@@ -160,6 +162,13 @@ public class RootWorldController : MonoBehaviour
         worldCamera.farClipPlane = 120f;
         worldCamera.clearFlags = CameraClearFlags.SolidColor;
         worldCamera.backgroundColor = new Color(0.025f, 0.026f, 0.027f);
+        _twoDimensionalStage = Mathf.Abs(Vector3.Dot(worldCamera.transform.forward, Vector3.forward)) > 0.95f;
+        if (_twoDimensionalStage)
+        {
+            worldCamera.transform.position = new Vector3(0f, 0f, -18f);
+            worldCamera.transform.rotation = Quaternion.identity;
+            worldCamera.orthographicSize = 6.7f;
+        }
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
         RenderSettings.ambientLight = new Color(0.74f, 0.70f, 0.62f);
     }
@@ -241,18 +250,29 @@ public class RootWorldController : MonoBehaviour
                 return;
             }
             _pendingTalkTarget = null;
-            _walkTarget = hit.point;
-            _walkTarget.y = player.position.y;
+            _walkTarget = StagePoint(hit.point);
             _hasWalkTarget = true;
+            return;
+        }
+        if (_twoDimensionalStage)
+        {
+            var plane = new Plane(Vector3.forward, new Vector3(0f, 0f, StageZ));
+            if (plane.Raycast(ray, out float enter))
+            {
+                _pendingTalkTarget = null;
+                _walkTarget = StagePoint(ray.GetPoint(enter));
+                _hasWalkTarget = true;
+            }
         }
     }
 
     Vector3 TalkApproachPoint(Transform target)
     {
         Vector3 direction = player.position - target.position;
-        direction.y = 0f;
+        if (_twoDimensionalStage) direction.z = 0f;
+        else direction.y = 0f;
         if (direction.sqrMagnitude < 0.01f) direction = -target.forward;
-        return target.position + direction.normalized * 1.35f;
+        return StagePoint(target.position + direction.normalized * 1.35f);
     }
 
     void UpdateMovement()
@@ -267,7 +287,8 @@ public class RootWorldController : MonoBehaviour
         else if (_hasWalkTarget)
         {
             Vector3 toTarget = _walkTarget - player.position;
-            toTarget.y = 0f;
+            if (_twoDimensionalStage) toTarget.z = 0f;
+            else toTarget.y = 0f;
             if (toTarget.magnitude <= ArriveDistance)
             {
                 _hasWalkTarget = false;
@@ -285,7 +306,9 @@ public class RootWorldController : MonoBehaviour
             float speed = running ? RunSpeed : WalkSpeed;
             if (_controller != null) _controller.Move(input * speed * Time.deltaTime);
             else player.position += input * speed * Time.deltaTime;
-            player.rotation = Quaternion.Slerp(player.rotation, Quaternion.LookRotation(input, Vector3.up), Time.deltaTime * 10f);
+            player.position = StagePoint(player.position);
+            Quaternion targetRotation = _twoDimensionalStage ? Quaternion.Euler(0f, 180f, Mathf.Clamp(-input.x * 4f, -5f, 5f)) : Quaternion.LookRotation(input, Vector3.up);
+            player.rotation = Quaternion.Slerp(player.rotation, targetRotation, Time.deltaTime * 10f);
         }
         UpdateAnimator(input.sqrMagnitude > 0.001f ? (running ? 2f : 1f) : 0f);
     }
@@ -295,15 +318,31 @@ public class RootWorldController : MonoBehaviour
         Vector3 forward = Vector3.ProjectOnPlane(worldCamera.transform.forward, Vector3.up).normalized;
         Vector3 right = Vector3.ProjectOnPlane(worldCamera.transform.right, Vector3.up).normalized;
         Vector3 input = Vector3.zero;
-        if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) input += forward;
-        if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) input -= forward;
-        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) input += right;
-        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) input -= right;
+        if (_twoDimensionalStage)
+        {
+            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) input += Vector3.up;
+            if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) input -= Vector3.up;
+            if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) input += Vector3.right;
+            if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) input -= Vector3.right;
+        }
+        else
+        {
+            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) input += forward;
+            if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) input -= forward;
+            if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) input += right;
+            if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) input -= right;
+        }
         return Vector3.ClampMagnitude(input, 1f);
     }
 
     void UpdateCamera()
     {
+        if (_twoDimensionalStage)
+        {
+            worldCamera.transform.position = new Vector3(0f, 0f, -18f);
+            worldCamera.transform.rotation = Quaternion.identity;
+            return;
+        }
         Vector3 focus = player.position + Vector3.up * 1.2f;
         worldCamera.transform.position = Vector3.Lerp(worldCamera.transform.position, focus + new Vector3(0f, 9.2f, -9.4f), Time.deltaTime * 6f);
         worldCamera.transform.rotation = Quaternion.Slerp(worldCamera.transform.rotation, Quaternion.Euler(47f, 0f, 0f), Time.deltaTime * 8f);
@@ -339,7 +378,18 @@ public class RootWorldController : MonoBehaviour
 
     bool IsCloseEnoughToTalk(RootWorldTalkTarget target)
     {
-        return target != null && Vector3.Distance(player.position, target.transform.position) <= TalkDistance + 0.5f;
+        if (target == null) return false;
+        if (_twoDimensionalStage) return Vector2.Distance(new Vector2(player.position.x, player.position.y), new Vector2(target.transform.position.x, target.transform.position.y)) <= TalkDistance + 0.5f;
+        return Vector3.Distance(player.position, target.transform.position) <= TalkDistance + 0.5f;
+    }
+
+    Vector3 StagePoint(Vector3 point)
+    {
+        if (!_twoDimensionalStage) return point;
+        point.x = Mathf.Clamp(point.x, -5.8f, 5.8f);
+        point.y = Mathf.Clamp(point.y, -4.6f, 4.6f);
+        point.z = StageZ;
+        return point;
     }
 
     void StartConversation(RootWorldTalkTarget target)

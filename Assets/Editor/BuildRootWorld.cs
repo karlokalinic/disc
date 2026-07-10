@@ -23,9 +23,9 @@ public static class BuildRootWorld
         var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         BuildWorld(Log);
 
-        var harry = InstantiatePrefab("Assets/GameObject/TequillaSunset.prefab", "Harry", new Vector3(-2.8f, 0f, -0.7f), 1.0f, Log);
-        var kim = InstantiatePrefab("Assets/GameObject/Kim.prefab", "Kim", new Vector3(1.4f, 0f, -1.1f), 1.0f, Log);
-        var klaasje = InstantiatePrefab("Assets/GameObject/Klaasje.prefab", "Klaasje", new Vector3(3.6f, 0f, 1.7f), 1.0f, Log);
+        var harry = InstantiatePrefab("Assets/GameObject/TequillaSunset.prefab", "Harry", new Vector3(-2.65f, -3.85f, -1.2f), 1.0f, Log);
+        var kim = InstantiatePrefab("Assets/GameObject/Kim.prefab", "Kim", new Vector3(-4.05f, -3.55f, -1.2f), 1.0f, Log);
+        var klaasje = InstantiatePrefab("Assets/GameObject/Klaasje.prefab", "Klaasje", new Vector3(4.05f, -3.35f, -1.2f), 1.0f, Log);
 
         if (harry != null)
         {
@@ -50,10 +50,10 @@ public static class BuildRootWorld
         var cameraObject = new GameObject("RootWorldCamera");
         var camera = cameraObject.AddComponent<Camera>();
         cameraObject.AddComponent<AudioListener>();
-        camera.transform.position = new Vector3(-2.8f, 9.2f, -10.1f);
-        camera.transform.rotation = Quaternion.Euler(47f, 0f, 0f);
+        camera.transform.position = new Vector3(0f, 0f, -18f);
+        camera.transform.rotation = Quaternion.identity;
         camera.orthographic = true;
-        camera.orthographicSize = 6.2f;
+        camera.orthographicSize = 6.7f;
         camera.clearFlags = CameraClearFlags.SolidColor;
         camera.backgroundColor = new Color(0.025f, 0.026f, 0.027f);
         camera.tag = "MainCamera";
@@ -72,8 +72,8 @@ public static class BuildRootWorld
         controller.klaasjePortrait = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Addressables Resources/NPC_portraits/portrait_klaasje.png");
         controller.worldMapTexture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Resources/lobby/Martinaise-worldmap.png");
 
-        AddTrigger("CaseBoardTrigger", "case_board", "Case board updated", new Vector3(-5.2f, 0.08f, 2.4f), new Vector3(1.4f, 0.16f, 1.0f), controller);
-        AddTrigger("BalconyLeadTrigger", "balcony_lead", "Balcony lead discovered", new Vector3(4.6f, 0.08f, 2.5f), new Vector3(1.8f, 0.16f, 0.9f), controller);
+        AddTrigger("CaseBoardTrigger", "case_board", "Case board updated", new Vector3(-5.0f, -1.8f, -1.2f), new Vector3(1.4f, 1.1f, 2.0f), controller);
+        AddTrigger("BalconyLeadTrigger", "balcony_lead", "Balcony lead discovered", new Vector3(4.3f, -2.3f, -1.2f), new Vector3(1.6f, 1.1f, 2.0f), controller);
 
         if (Object.FindAnyObjectByType<EventSystem>() == null)
         {
@@ -137,6 +137,47 @@ public static class BuildRootWorld
         if (failures > 0) throw new System.InvalidOperationException("RootWorld validation failed: " + failures);
     }
 
+    public static void ValidateVisual()
+    {
+        EditorSceneManager.OpenScene("Assets/_IntroReal/RootWorldReal.unity", OpenSceneMode.Single);
+        var camera = Object.FindAnyObjectByType<Camera>();
+        if (camera == null) throw new System.InvalidOperationException("RootWorld visual validation failed: no camera");
+
+        int width = 1280;
+        int height = 720;
+        var rt = new RenderTexture(width, height, 24);
+        camera.targetTexture = rt;
+        camera.Render();
+        RenderTexture.active = rt;
+
+        var image = new Texture2D(width, height, TextureFormat.RGB24, false);
+        image.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+        image.Apply();
+        camera.targetTexture = null;
+        RenderTexture.active = null;
+
+        var pixels = image.GetPixels();
+        float luminance = 0f;
+        float magenta = 0f;
+        foreach (var color in pixels)
+        {
+            luminance += (color.r + color.g + color.b) / 3f;
+            if (color.r > 0.6f && color.b > 0.6f && color.g < 0.3f) magenta += 1f;
+        }
+        luminance /= pixels.Length;
+        magenta /= pixels.Length;
+
+        string root = Directory.GetParent(Application.dataPath).FullName;
+        File.WriteAllBytes(Path.Combine(root, "root_world_visual_validation.png"), image.EncodeToPNG());
+        File.WriteAllText(Path.Combine(root, "root_world_visual_validation.txt"), "avgLum=" + luminance.ToString("0.000") + "\nmagentaFrac=" + magenta.ToString("0.0000"));
+
+        Object.DestroyImmediate(rt);
+        Object.DestroyImmediate(image);
+
+        if (luminance < 0.005f) throw new System.InvalidOperationException("RootWorld visual validation failed: image is effectively black");
+        if (magenta > 0.01f) throw new System.InvalidOperationException("RootWorld visual validation failed: magenta fraction " + magenta.ToString("0.0000"));
+    }
+
     static void Check(bool condition, string message, ref int failures, System.Action<string> log)
     {
         if (condition) log("OK " + message);
@@ -161,7 +202,7 @@ public static class BuildRootWorld
 
     static void BuildWorld(System.Action<string> log)
     {
-        AddInvisibleCollider("WhirlingRootWalkable", new Vector3(0f, -0.08f, 0f), new Vector3(12f, 0.16f, 8f));
+        AddInvisibleCollider("WhirlingRootWalkable", new Vector3(0f, 0f, -1.25f), new Vector3(12f, 10f, 0.2f));
 
         var backdropTexture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Texture2D/WhirlingF1.png");
         if (backdropTexture != null)
@@ -169,17 +210,17 @@ public static class BuildRootWorld
             var backdrop = GameObject.CreatePrimitive(PrimitiveType.Quad);
             backdrop.name = "WhirlingPaintedBackdrop";
             Object.DestroyImmediate(backdrop.GetComponent<Collider>());
-            backdrop.transform.position = new Vector3(0f, 0.015f, 0f);
-            backdrop.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-            backdrop.transform.localScale = new Vector3(11.8f, 7.4f, 1f);
+            backdrop.transform.position = Vector3.zero;
+            backdrop.transform.rotation = Quaternion.identity;
+            backdrop.transform.localScale = new Vector3(13f, 13f, 1f);
             backdrop.GetComponent<Renderer>().sharedMaterial = Unlit(backdropTexture);
             log("backdrop WhirlingF1 loaded");
         }
         else log("missing WhirlingF1 backdrop texture");
 
-        AddMapMarker("Room", new Vector3(-4.8f, 0.03f, -3.0f), new Color(0.34f, 0.25f, 0.16f));
-        AddMapMarker("Lobby", new Vector3(-0.4f, 0.03f, -3.0f), new Color(0.27f, 0.31f, 0.24f));
-        AddMapMarker("Balcony", new Vector3(4.2f, 0.03f, -3.0f), new Color(0.20f, 0.30f, 0.35f));
+        AddMapMarker("Room", new Vector3(-4.8f, -3.2f, -1.2f), new Color(0.34f, 0.25f, 0.16f));
+        AddMapMarker("Lobby", new Vector3(-0.4f, -3.0f, -1.2f), new Color(0.27f, 0.31f, 0.24f));
+        AddMapMarker("Balcony", new Vector3(4.2f, -3.0f, -1.2f), new Color(0.20f, 0.30f, 0.35f));
     }
 
     static void AddWall(string name, Vector3 position, Vector3 scale)
