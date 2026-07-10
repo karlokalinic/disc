@@ -25,7 +25,7 @@ public class RootWorldController : MonoBehaviour
     readonly Dictionary<int, string> _actorNames = new Dictionary<int, string>();
     readonly HashSet<int> _playerActors = new HashSet<int>();
     readonly List<DialogueEntry> _choices = new List<DialogueEntry>();
-    readonly List<string> _journal = new List<string>();
+    readonly List<CustomChoice> _visibleCustomChoices = new List<CustomChoice>();
     readonly Dictionary<string, CustomConversation> _customConversations = new Dictionary<string, CustomConversation>();
     DialogueEntry _activeEntry;
     Conversation _activeConversation;
@@ -73,6 +73,16 @@ public class RootWorldController : MonoBehaviour
         public string text;
         public string next;
         public string flag;
+        public string requiresFlag;
+        public string blockedByFlag;
+        public string unlockLocation;
+        public string setsObjective;
+        public string checkSkill;
+        public int checkDifficulty;
+        public string successNext;
+        public string failureNext;
+        public string successFlag;
+        public string failureFlag;
     }
 
     void Start()
@@ -81,6 +91,9 @@ public class RootWorldController : MonoBehaviour
         SetupCamera();
         LoadCustomDialogue();
         EnsureDatabaseReady();
+        RestoredGameState.UnlockLocation("root");
+        RestoredGameState.UnlockLocation("room");
+        RestoredGameState.UnlockLocation("lobby");
         RegisterVisit("root_world");
     }
 
@@ -394,11 +407,11 @@ public class RootWorldController : MonoBehaviour
         }
         if (_activeCustomNode != null && _activeCustomNode.choices != null)
         {
-            for (int i = 0; i < _activeCustomNode.choices.Length && i < 9; i++)
+            for (int i = 0; i < _visibleCustomChoices.Count && i < 9; i++)
             {
                 if (Input.GetKeyDown(KeyCode.Alpha1 + i))
                 {
-                    ChooseCustom(_activeCustomNode.choices[i]);
+                    ChooseCustom(_visibleCustomChoices[i]);
                     return;
                 }
             }
@@ -494,29 +507,81 @@ public class RootWorldController : MonoBehaviour
                 _activeCustomNode = node;
                 _speaker = string.IsNullOrEmpty(node.speaker) ? DisplayName(_activeTalkTarget) : node.speaker;
                 _line = node.text ?? "";
+                RebuildVisibleCustomChoices();
                 return;
             }
         }
         CloseDialogue();
     }
 
+    void RebuildVisibleCustomChoices()
+    {
+        _visibleCustomChoices.Clear();
+        if (_activeCustomNode == null || _activeCustomNode.choices == null) return;
+        foreach (var choice in _activeCustomNode.choices)
+        {
+            if (choice == null) continue;
+            if (!string.IsNullOrEmpty(choice.requiresFlag) && !RestoredGameState.HasFlag(choice.requiresFlag)) continue;
+            if (!string.IsNullOrEmpty(choice.blockedByFlag) && RestoredGameState.HasFlag(choice.blockedByFlag)) continue;
+            _visibleCustomChoices.Add(choice);
+        }
+    }
+
     void ChooseCustom(CustomChoice choice)
     {
         if (choice == null) return;
-        if (!string.IsNullOrEmpty(choice.flag))
+        ApplyCustomChoiceEffects(choice);
+        if (choice.checkDifficulty > 0 && !string.IsNullOrEmpty(choice.checkSkill))
         {
-            string flag = "rootworld.custom." + Key(_activeTalkTarget) + "." + choice.flag;
-            PlayerPrefs.SetInt(flag, 1);
-            PlayerPrefs.Save();
-            Remember(flag);
+            ResolveCustomCheck(choice);
+            return;
         }
         ShowCustomNode(choice.next);
+    }
+
+    void ApplyCustomChoiceEffects(CustomChoice choice)
+    {
+        if (!string.IsNullOrEmpty(choice.flag))
+        {
+            RestoredGameState.SetFlag(choice.flag);
+            Remember("Choice: " + choice.flag);
+        }
+        UnlockLocations(choice.unlockLocation);
+        if (!string.IsNullOrEmpty(choice.setsObjective)) RestoredGameState.SetObjective(choice.setsObjective);
+    }
+
+    void ResolveCustomCheck(CustomChoice choice)
+    {
+        int d1 = Random.Range(1, 7);
+        int d2 = Random.Range(1, 7);
+        int ability = AbilityValueForSkill(choice.checkSkill);
+        int total = d1 + d2 + ability;
+        bool success = (d1 == 6 && d2 == 6) || total >= choice.checkDifficulty;
+        string resultFlag = success ? choice.successFlag : choice.failureFlag;
+        if (!string.IsNullOrEmpty(resultFlag)) RestoredGameState.SetFlag(resultFlag);
+        string line = choice.checkSkill.ToUpperInvariant() + " " + d1 + "+" + d2 + "+" + ability + " = " + total + " / " + choice.checkDifficulty + " -> " + (success ? "SUCCESS" : "FAILURE");
+        Remember(line);
+        _speaker = "CHECK";
+        _line = line;
+        string next = success ? choice.successNext : choice.failureNext;
+        ShowCustomNode(string.IsNullOrEmpty(next) ? choice.next : next);
+    }
+
+    int AbilityValueForSkill(string skill)
+    {
+        if (string.IsNullOrEmpty(skill)) return 1;
+        string key = skill.ToLowerInvariant();
+        if (key.Contains("logic") || key.Contains("encyclopedia") || key.Contains("visual")) return 3;
+        if (key.Contains("empathy") || key.Contains("volition") || key.Contains("inland")) return 3;
+        if (key.Contains("perception") || key.Contains("reaction") || key.Contains("interfacing")) return 3;
+        return 2;
     }
 
     void CloseDialogue()
     {
         _dialogueOpen = false;
         _choices.Clear();
+        _visibleCustomChoices.Clear();
         _activeEntry = null;
         _activeConversation = null;
         _activeCustomConversation = null;
@@ -529,6 +594,8 @@ public class RootWorldController : MonoBehaviour
         string key = string.IsNullOrEmpty(triggerKey) ? "trigger" : triggerKey;
         PlayerPrefs.SetInt("rootworld.trigger." + key, 1);
         PlayerPrefs.Save();
+        RestoredGameState.SetFlag("trigger." + key);
+        if (key.Contains("balcony")) RestoredGameState.UnlockLocation("balcony");
         string label = string.IsNullOrEmpty(displayName) ? key : displayName;
         Remember("Trigger: " + label);
         _hint = label + " added to the case journal. Press M for the world map.";
@@ -536,16 +603,12 @@ public class RootWorldController : MonoBehaviour
 
     void RegisterVisit(string key)
     {
-        string pref = "rootworld.visit." + key;
-        PlayerPrefs.SetInt(pref, PlayerPrefs.GetInt(pref, 0) + 1);
-        PlayerPrefs.Save();
+        RestoredGameState.Increment("visit." + key);
     }
 
     void Remember(string line)
     {
-        if (string.IsNullOrEmpty(line)) return;
-        _journal.Insert(0, line);
-        while (_journal.Count > 6) _journal.RemoveAt(_journal.Count - 1);
+        RestoredGameState.Remember(line);
     }
 
     void ApplyScript(string script)
@@ -560,6 +623,7 @@ public class RootWorldController : MonoBehaviour
         string key = script.Substring(start, end - start);
         PlayerPrefs.SetInt("dialogue." + key, 1);
         PlayerPrefs.Save();
+        RestoredGameState.SetFlag("dialogue." + key);
         Remember("Dialogue flag: " + key);
     }
 
@@ -580,12 +644,24 @@ public class RootWorldController : MonoBehaviour
     {
         var rect = new Rect(24, 72, 360, 390);
         GUI.Box(rect, "WORLD MAP");
-        GUI.Label(new Rect(rect.x + 18, rect.y + 36, rect.width - 36, 24), "Root scene: Whirling hub reconstruction");
-        if (GUI.Button(new Rect(rect.x + 18, rect.y + 74, rect.width - 36, 32), "RoomReal")) LoadSceneIfAvailable("RoomReal");
-        if (GUI.Button(new Rect(rect.x + 18, rect.y + 112, rect.width - 36, 32), "WhirlingLobbyReal")) LoadSceneIfAvailable("WhirlingLobbyReal");
-        if (GUI.Button(new Rect(rect.x + 18, rect.y + 150, rect.width - 36, 32), "KlaasjeBalconyReal")) LoadSceneIfAvailable("KlaasjeBalconyReal");
-        GUI.Label(new Rect(rect.x + 18, rect.y + 198, rect.width - 36, 24), "Recent individual state:");
-        for (int i = 0; i < _journal.Count; i++) GUI.Label(new Rect(rect.x + 18, rect.y + 226 + i * 24, rect.width - 36, 22), "- " + _journal[i]);
+        GUI.Label(new Rect(rect.x + 18, rect.y + 34, rect.width - 36, 40), "Objective: " + RestoredGameState.CurrentObjective());
+        DrawMapButton(new Rect(rect.x + 18, rect.y + 82, rect.width - 36, 32), "RoomReal", "room", "RoomReal");
+        DrawMapButton(new Rect(rect.x + 18, rect.y + 120, rect.width - 36, 32), "WhirlingLobbyReal", "lobby", "WhirlingLobbyReal");
+        DrawMapButton(new Rect(rect.x + 18, rect.y + 158, rect.width - 36, 32), "KlaasjeBalconyReal", "balcony", "KlaasjeBalconyReal");
+        GUI.Label(new Rect(rect.x + 18, rect.y + 206, rect.width - 36, 24), "Recent individual state:");
+        for (int i = 0; i < RestoredGameState.JournalCapacity; i++)
+        {
+            string line = RestoredGameState.JournalLine(i);
+            if (!string.IsNullOrEmpty(line)) GUI.Label(new Rect(rect.x + 18, rect.y + 234 + i * 22, rect.width - 36, 20), "- " + line);
+        }
+    }
+
+    void DrawMapButton(Rect rect, string label, string locationKey, string sceneName)
+    {
+        bool unlocked = RestoredGameState.IsLocationUnlocked(locationKey);
+        GUI.enabled = unlocked;
+        if (GUI.Button(rect, unlocked ? label : label + " (locked)")) LoadSceneIfAvailable(sceneName);
+        GUI.enabled = true;
     }
 
     void DrawDialogue()
@@ -603,12 +679,12 @@ public class RootWorldController : MonoBehaviour
                 if (GUI.Button(new Rect(rect.x + 24, rect.y + 212 + i * 38, rect.width - 48, 30), text)) ChooseDialogue(_choices[i]);
             }
         }
-        else if (_activeCustomNode != null && _activeCustomNode.choices != null && _activeCustomNode.choices.Length > 0)
+        else if (_activeCustomNode != null && _visibleCustomChoices.Count > 0)
         {
-            for (int i = 0; i < _activeCustomNode.choices.Length && i < 9; i++)
+            for (int i = 0; i < _visibleCustomChoices.Count && i < 9; i++)
             {
-                string text = (i + 1) + ". " + _activeCustomNode.choices[i].text;
-                if (GUI.Button(new Rect(rect.x + 24, rect.y + 212 + i * 38, rect.width - 48, 30), text)) ChooseCustom(_activeCustomNode.choices[i]);
+                string text = (i + 1) + ". " + _visibleCustomChoices[i].text;
+                if (GUI.Button(new Rect(rect.x + 24, rect.y + 212 + i * 38, rect.width - 48, 30), text)) ChooseCustom(_visibleCustomChoices[i]);
             }
         }
         else GUI.Label(new Rect(rect.x + 24, rect.yMax - 46, rect.width - 48, 24), "E / Space / Enter continues. Esc closes.");
@@ -618,6 +694,18 @@ public class RootWorldController : MonoBehaviour
     {
         if (Application.CanStreamedLevelBeLoaded(sceneName)) SceneManager.LoadScene(sceneName);
         else _hint = sceneName + " is not in build settings yet.";
+    }
+
+    void UnlockLocations(string unlockLocation)
+    {
+        if (string.IsNullOrEmpty(unlockLocation)) return;
+        foreach (var raw in unlockLocation.Split(','))
+        {
+            string key = raw.Trim();
+            if (key.Length == 0) continue;
+            RestoredGameState.UnlockLocation(key);
+            Remember("Unlocked location: " + key);
+        }
     }
 
     static string Field(List<Field> fields, string title)

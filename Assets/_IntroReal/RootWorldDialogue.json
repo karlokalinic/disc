@@ -8,12 +8,15 @@
           "speaker": "Kim Kitsuragi",
           "text": "The lieutenant waits for you to choose the next lead.",
           "choices": [
-            { "text": "Ask him to follow your lead.", "next": "follow", "flag": "kim_follow" },
-            { "text": "Ask about the map.", "next": "map", "flag": "kim_map" }
+            { "text": "Ask him to follow your lead.", "next": "follow", "flag": "kim_follow", "setsObjective": "Question Klaasje, then check the balcony lead." },
+            { "text": "Ask about the map.", "next": "map", "flag": "kim_map", "unlockLocation": "lobby", "setsObjective": "Use the world map to move between active investigation spaces." },
+            { "text": "Run a Logic check on the case board.", "next": "logic_fail", "requiresFlag": "trigger.case_board", "checkSkill": "LOGIC", "checkDifficulty": 10, "successNext": "logic_success", "failureNext": "logic_fail", "successFlag": "kim_logic_success", "failureFlag": "kim_logic_failure" }
           ]
         },
         { "id": "follow", "speaker": "Kim Kitsuragi", "text": "He nods once. The investigation continues.", "choices": [] },
-        { "id": "map", "speaker": "Kim Kitsuragi", "text": "He marks the Whirling, the balcony, and your room as active points of interest.", "choices": [] }
+        { "id": "map", "speaker": "Kim Kitsuragi", "text": "He marks the Whirling and your room as active points of interest. Other places should unlock through leads, not magic.", "choices": [] },
+        { "id": "logic_success", "speaker": "LOGIC", "text": "The room, lobby, and balcony form a clean chain. Klaasje's window is the next pressure point.", "choices": [] },
+        { "id": "logic_fail", "speaker": "LOGIC", "text": "The board stays messy. You need more testimony before the chain becomes obvious.", "choices": [] }
       ]
     },
     {
@@ -24,12 +27,14 @@
           "speaker": "Klaasje",
           "text": "She watches the room from the window, cigarette smoke hanging in the air.",
           "choices": [
-            { "text": "Ask what she saw.", "next": "saw", "flag": "klaasje_saw" },
-            { "text": "Ask about the missing shoe.", "next": "shoe", "flag": "klaasje_shoe" }
+            { "text": "Ask what she saw.", "next": "saw", "flag": "klaasje_saw", "setsObjective": "Compare Klaasje's testimony with Kim's case board." },
+            { "text": "Ask about the missing shoe.", "next": "shoe", "flag": "klaasje_shoe", "unlockLocation": "balcony", "setsObjective": "Go to the balcony and recover the shoe lead." },
+            { "text": "Press her on the contradiction.", "next": "press", "requiresFlag": "kim_logic_success", "flag": "klaasje_pressed" }
           ]
         },
         { "id": "saw", "speaker": "Klaasje", "text": "She gives you enough to keep moving, but not enough to trust her completely.", "choices": [] },
-        { "id": "shoe", "speaker": "Klaasje", "text": "The balcony becomes a lead. Check it from the world map when you are ready.", "choices": [] }
+        { "id": "shoe", "speaker": "Klaasje", "text": "The balcony becomes a lead. Check it from the world map when you are ready.", "choices": [] },
+        { "id": "press", "speaker": "Klaasje", "text": "For a second she stops performing. That second is enough to become part of your version of the case.", "choices": [] }
       ]
     }
   ]

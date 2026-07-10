@@ -67,6 +67,7 @@ public static class BuildRootWorld
         controller.klaasje = klaasje != null ? klaasje.transform : null;
         controller.playerController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>("Assets/_IntroReal/RecoveredTequilaMovement.controller");
         controller.worldCamera = camera;
+        controller.preferCustomDialogue = true;
 
         AddTrigger("CaseBoardTrigger", "case_board", "Case board updated", new Vector3(-5.2f, 0.08f, 2.4f), new Vector3(1.4f, 0.16f, 1.0f), controller);
         AddTrigger("BalconyLeadTrigger", "balcony_lead", "Balcony lead discovered", new Vector3(4.6f, 0.08f, 2.5f), new Vector3(1.8f, 0.16f, 0.9f), controller);
@@ -91,6 +92,52 @@ public static class BuildRootWorld
 
         string root = Directory.GetParent(Application.dataPath).FullName;
         File.WriteAllText(Path.Combine(root, "root_world_result.txt"), log.ToString());
+    }
+
+    public static void Validate()
+    {
+        var log = new System.Text.StringBuilder();
+        void Line(string message)
+        {
+            log.AppendLine(message);
+            Debug.Log("[ROOT WORLD VALIDATE] " + message);
+        }
+
+        string scenePath = "Assets/_IntroReal/RootWorldReal.unity";
+        EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+        var controller = Object.FindAnyObjectByType<RootWorldController>();
+        var talkTargets = Object.FindObjectsByType<RootWorldTalkTarget>(FindObjectsInactive.Exclude);
+        var triggers = Object.FindObjectsByType<RootWorldTrigger>(FindObjectsInactive.Exclude);
+        var cameras = Object.FindObjectsByType<Camera>(FindObjectsInactive.Exclude);
+
+        int failures = 0;
+        Check(controller != null, "RootWorldController exists", ref failures, Line);
+        if (controller != null)
+        {
+            Check(controller.player != null, "player assigned", ref failures, Line);
+            Check(controller.kim != null, "kim assigned", ref failures, Line);
+            Check(controller.klaasje != null, "klaasje assigned", ref failures, Line);
+            Check(controller.customDialogueJson != null, "custom dialogue JSON assigned", ref failures, Line);
+            Check(controller.preferCustomDialogue, "custom dialogue preferred for restored root scene", ref failures, Line);
+            Check(controller.playerController != null, "player movement controller assigned", ref failures, Line);
+        }
+        Check(talkTargets.Length >= 2, "Kim/Klaasje talk targets present: " + talkTargets.Length, ref failures, Line);
+        Check(triggers.Length >= 2, "world triggers present: " + triggers.Length, ref failures, Line);
+        Check(cameras.Length >= 1, "camera present: " + cameras.Length, ref failures, Line);
+
+        string root = Directory.GetParent(Application.dataPath).FullName;
+        File.WriteAllText(Path.Combine(root, "root_world_validation.txt"), "failures=" + failures + "\n" + log);
+        if (failures > 0) throw new System.InvalidOperationException("RootWorld validation failed: " + failures);
+    }
+
+    static void Check(bool condition, string message, ref int failures, System.Action<string> log)
+    {
+        if (condition) log("OK " + message);
+        else
+        {
+            failures++;
+            log("FAIL " + message);
+        }
     }
 
     static void BuildWorld(System.Action<string> log)
