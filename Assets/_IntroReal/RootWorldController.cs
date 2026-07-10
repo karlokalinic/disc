@@ -490,6 +490,8 @@ public class RootWorldController : MonoBehaviour
         ApplyScript(Field(entry.fields, "userScript"));
         PlayerPrefs.SetInt("rootworld.choice." + Key(_activeTalkTarget) + "." + entry.id, 1);
         PlayerPrefs.Save();
+        RestoredGameState.SetFlag("choice." + Key(_activeTalkTarget) + "." + entry.id);
+        Remember("Choice: " + Key(_activeTalkTarget) + " " + entry.id);
         _activeEntry = entry;
     }
 

@@ -369,6 +369,7 @@ public class RecoveredSceneBootstrap : MonoBehaviour
         string flag = "recovered." + SceneManager.GetActiveScene().name + "." + source.Replace(" ", "_");
         PlayerPrefs.SetInt(flag, success ? 1 : -1);
         PlayerPrefs.Save();
+        RestoredGameState.SetFlag(flag + (success ? ".success" : ".failure"));
         RememberProgress(flag + " = " + (success ? "SUCCESS" : "FAILURE"));
 
         _log = (success ? "Recorded consequence: " : "Recorded failed check: ") + flag;
@@ -942,7 +943,7 @@ public class RecoveredSceneBootstrap : MonoBehaviour
             int end = condition.IndexOf("\"]", start, System.StringComparison.Ordinal);
             if (end < 0) break;
             string varName = condition.Substring(start, end - start);
-            bool value = PlayerPrefs.GetInt("dialogue." + varName, 0) != 0;
+            bool value = PlayerPrefs.GetInt("dialogue." + varName, 0) != 0 || RestoredGameState.HasFlag("dialogue." + varName);
             string tail = condition.Substring(end, Mathf.Min(24, condition.Length - end)).ToLowerInvariant();
             bool wantsFalse = tail.Contains("false") || condition.LastIndexOf('!', idx, Mathf.Min(idx, 4)) >= 0;
             if (wantsFalse ? value : !value) return false;
@@ -976,6 +977,7 @@ public class RecoveredSceneBootstrap : MonoBehaviour
             }
             PlayerPrefs.SetInt("dialogue." + varName, value ? 1 : 0);
             PlayerPrefs.Save();
+            RestoredGameState.SetFlag("dialogue." + varName, value);
             RememberProgress("dialogue." + varName + " = " + value);
             _log = "Dialogue variable set: " + varName + " = " + value;
             idx = end + 1;
@@ -988,6 +990,7 @@ public class RecoveredSceneBootstrap : MonoBehaviour
         _recentProgress.Remove(entry);
         _recentProgress.Insert(0, entry);
         while (_recentProgress.Count > 12) _recentProgress.RemoveAt(_recentProgress.Count - 1);
+        RestoredGameState.Remember(entry);
     }
 
     static string Field(List<Field> fields, string title)

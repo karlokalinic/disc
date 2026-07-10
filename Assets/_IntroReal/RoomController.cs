@@ -312,7 +312,12 @@ public class RoomController : MonoBehaviour
             if (Vector2.Distance(new Vector2(p.x,p.y), new Vector2(_door.position.x,_door.position.y)) < 1.7f)
             {
                 ShowBubble("Hallway / balcony   [E / Space]");
-                if (InteractPressed()) SceneManager.LoadScene("KlaasjeBalconyReal");
+                if (InteractPressed())
+                {
+                    RestoredGameState.UnlockLocation("balcony");
+                    RestoredGameState.Remember("Scene path: room -> balcony");
+                    SceneManager.LoadScene("KlaasjeBalconyReal");
+                }
             }
             else HideBubbleIf("Hallway / balcony   [E / Space]");
         }
@@ -507,6 +512,8 @@ public class RoomController : MonoBehaviour
             if (n.Contains("tequila_pants") || n.Contains("shoes")) smr.gameObject.SetActive(true);
         }
         if (_door != null) _door.gameObject.SetActive(false);
+        RestoredGameState.UnlockLocation("balcony");
+        RestoredGameState.SetObjective("Leave the room and question Klaasje on the balcony.");
         var clip = Resources.Load<AudioClip>("keys"); if (clip != null) _sfx.PlayOneShot(clip);
         ShowBubble("*jingle* — the keys are in the pocket. The door is unlocked.");
         Banner("Trousers on. Keys in your pocket. The door will open now.");
@@ -541,6 +548,8 @@ public class RoomController : MonoBehaviour
     {
         if (string.IsNullOrEmpty(item) || _inventory.Contains(item)) return;
         _inventory.Add(item);
+        RestoredGameState.SetFlag("inventory." + item);
+        RestoredGameState.Remember("Inventory: " + item);
         RefreshInventoryUI();
     }
 
@@ -592,6 +601,9 @@ public class RoomController : MonoBehaviour
         bool critFail = d1 == 1 && d2 == 1;
         bool critSuccess = d1 == 6 && d2 == 6;
         bool success = critSuccess || (!critFail && total >= spec.difficulty);
+        string checkKey = "room.check." + action.Replace(" ", "_").ToLowerInvariant();
+        RestoredGameState.SetFlag(checkKey + (success ? ".success" : ".failure"));
+        RestoredGameState.Remember(spec.name + " " + total + " / " + spec.difficulty + " " + (success ? "SUCCESS" : "FAILURE"));
 
         if (_skillPanel != null)
         {

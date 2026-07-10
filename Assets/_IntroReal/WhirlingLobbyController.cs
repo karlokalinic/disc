@@ -195,7 +195,10 @@ public class WhirlingLobbyController : MonoBehaviour
 
     void Choose(DialogueEntry e)
     {
-        _choices.Clear(); _speaker = "YOU"; _line = Clean(Field(e.fields, "Dialogue Text")); ApplyScript(Field(e.fields, "userScript")); _activeEntry = e;
+        _choices.Clear(); _speaker = "YOU"; _line = Clean(Field(e.fields, "Dialogue Text")); ApplyScript(Field(e.fields, "userScript"));
+        RestoredGameState.SetFlag("choice.lobby." + e.id);
+        RestoredGameState.Remember("Lobby choice " + e.id);
+        _activeEntry = e;
     }
 
     void ApplyScript(string script)
@@ -203,7 +206,13 @@ public class WhirlingLobbyController : MonoBehaviour
         if (string.IsNullOrEmpty(script)) return;
         int idx = script.IndexOf("SetVariableValue(\"", System.StringComparison.Ordinal); if (idx < 0) idx = script.IndexOf("XPTinySetBool(\"", System.StringComparison.Ordinal); if (idx < 0) return;
         int start = script.IndexOf('"', idx) + 1; int end = script.IndexOf('"', start);
-        if (start > 0 && end > start) { PlayerPrefs.SetInt("dialogue." + script.Substring(start, end - start), 1); PlayerPrefs.Save(); }
+        if (start > 0 && end > start)
+        {
+            string key = script.Substring(start, end - start);
+            PlayerPrefs.SetInt("dialogue." + key, 1); PlayerPrefs.Save();
+            RestoredGameState.SetFlag("dialogue." + key);
+            RestoredGameState.Remember("Dialogue flag: " + key);
+        }
     }
 
     static string Field(List<Field> fields, string title) { if (fields == null) return null; foreach (var f in fields) if (f != null && f.title == title) return f.value; return null; }

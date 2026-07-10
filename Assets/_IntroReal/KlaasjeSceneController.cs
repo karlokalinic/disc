@@ -141,6 +141,9 @@ public class KlaasjeSceneController : MonoBehaviour
                 shoe.gameObject.SetActive(false);
                 PlayerPrefs.SetInt("recovered.klaasje_balcony.other_shoe", 1);
                 PlayerPrefs.Save();
+                RestoredGameState.SetFlag("klaasje.other_shoe");
+                RestoredGameState.UnlockLocation("balcony");
+                RestoredGameState.SetObjective("Compare the balcony shoe lead with Klaasje's testimony.");
                 ShowBubble("The other shoe. Shards of glass, still in the heel.");
             }
         }
@@ -235,6 +238,8 @@ public class KlaasjeSceneController : MonoBehaviour
         _speaker = "YOU";
         _line = Clean(Field(e.fields, "Dialogue Text"));
         ApplyScript(Field(e.fields, "userScript"));
+        RestoredGameState.SetFlag("choice.klaasje." + e.id);
+        RestoredGameState.Remember("Klaasje choice " + e.id);
         _activeEntry = e;
     }
 
@@ -251,6 +256,8 @@ public class KlaasjeSceneController : MonoBehaviour
             string key = script.Substring(start, end - start);
             PlayerPrefs.SetInt("dialogue." + key, 1);
             PlayerPrefs.Save();
+            RestoredGameState.SetFlag("dialogue." + key);
+            RestoredGameState.Remember("Dialogue flag: " + key);
         }
     }
 
