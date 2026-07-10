@@ -14,6 +14,9 @@ public class RootWorldController : MonoBehaviour
     public RuntimeAnimatorController playerController;
     public Camera worldCamera;
     public bool preferCustomDialogue;
+    public Texture2D kimPortrait;
+    public Texture2D klaasjePortrait;
+    public Texture2D worldMapTexture;
 
     CharacterController _controller;
     Animator _animator;
@@ -39,6 +42,16 @@ public class RootWorldController : MonoBehaviour
     string _speaker = "";
     string _line = "";
     string _hint = "Click the floor to walk. Hold Shift to run. Click Kim or Klaasje to talk. Press M for the world map.";
+    Texture2D _darkTexture;
+    Texture2D _panelTexture;
+    Texture2D _redTexture;
+    Texture2D _goldTexture;
+    GUIStyle _hintStyle;
+    GUIStyle _panelStyle;
+    GUIStyle _speakerStyle;
+    GUIStyle _lineStyle;
+    GUIStyle _choiceStyle;
+    GUIStyle _smallStyle;
 
     const float WalkSpeed = 3.2f;
     const float RunSpeed = 5.6f;
@@ -89,6 +102,7 @@ public class RootWorldController : MonoBehaviour
     {
         SetupPlayer();
         SetupCamera();
+        BuildGuiStyles();
         LoadCustomDialogue();
         EnsureDatabaseReady();
         RestoredGameState.UnlockLocation("root");
@@ -141,13 +155,37 @@ public class RootWorldController : MonoBehaviour
         }
         worldCamera.tag = "MainCamera";
         worldCamera.orthographic = true;
-        worldCamera.orthographicSize = 6.2f;
+        worldCamera.orthographicSize = 5.9f;
         worldCamera.nearClipPlane = 0.05f;
         worldCamera.farClipPlane = 120f;
         worldCamera.clearFlags = CameraClearFlags.SolidColor;
         worldCamera.backgroundColor = new Color(0.025f, 0.026f, 0.027f);
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
         RenderSettings.ambientLight = new Color(0.74f, 0.70f, 0.62f);
+    }
+
+    void BuildGuiStyles()
+    {
+        _darkTexture = Solid(new Color(0.010f, 0.010f, 0.012f, 0.88f));
+        _panelTexture = Solid(new Color(0.025f, 0.022f, 0.020f, 0.92f));
+        _redTexture = Solid(new Color(0.34f, 0.035f, 0.025f, 0.94f));
+        _goldTexture = Solid(new Color(0.74f, 0.58f, 0.30f, 0.92f));
+
+        _hintStyle = new GUIStyle(GUI.skin.label) { fontSize = 18, wordWrap = true, normal = { textColor = new Color(0.88f, 0.82f, 0.68f) } };
+        _panelStyle = new GUIStyle(GUI.skin.box) { normal = { background = _panelTexture, textColor = new Color(0.84f, 0.72f, 0.48f) } };
+        _speakerStyle = new GUIStyle(GUI.skin.label) { fontSize = 18, fontStyle = FontStyle.Bold, normal = { textColor = new Color(0.86f, 0.64f, 0.38f) } };
+        _lineStyle = new GUIStyle(GUI.skin.label) { fontSize = 19, wordWrap = true, richText = true, normal = { textColor = new Color(0.92f, 0.90f, 0.82f) } };
+        _choiceStyle = new GUIStyle(GUI.skin.button) { fontSize = 16, alignment = TextAnchor.MiddleLeft, wordWrap = true, normal = { background = _redTexture, textColor = new Color(0.98f, 0.90f, 0.82f) }, hover = { background = _goldTexture, textColor = Color.black } };
+        _smallStyle = new GUIStyle(GUI.skin.label) { fontSize = 14, wordWrap = true, normal = { textColor = new Color(0.70f, 0.66f, 0.56f) } };
+    }
+
+    Texture2D Solid(Color color)
+    {
+        var tex = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+        tex.hideFlags = HideFlags.HideAndDontSave;
+        tex.SetPixel(0, 0, color);
+        tex.Apply();
+        return tex;
     }
 
     void LoadCustomDialogue()
@@ -638,23 +676,25 @@ public class RootWorldController : MonoBehaviour
 
     void DrawHint()
     {
-        GUI.Box(new Rect(20, Screen.height - 72, Screen.width - 40, 44), "");
-        GUI.Label(new Rect(36, Screen.height - 60, Screen.width - 72, 24), _hint);
+        var rect = new Rect(24, Screen.height - 74, Screen.width - 48, 46);
+        GUI.DrawTexture(rect, _darkTexture, ScaleMode.StretchToFill);
+        GUI.Label(new Rect(rect.x + 16, rect.y + 12, rect.width - 32, 24), _hint, _hintStyle);
     }
 
     void DrawWorldMap()
     {
-        var rect = new Rect(24, 72, 360, 390);
-        GUI.Box(rect, "WORLD MAP");
-        GUI.Label(new Rect(rect.x + 18, rect.y + 34, rect.width - 36, 40), "Objective: " + RestoredGameState.CurrentObjective());
-        DrawMapButton(new Rect(rect.x + 18, rect.y + 82, rect.width - 36, 32), "RoomReal", "room", "RoomReal");
-        DrawMapButton(new Rect(rect.x + 18, rect.y + 120, rect.width - 36, 32), "WhirlingLobbyReal", "lobby", "WhirlingLobbyReal");
-        DrawMapButton(new Rect(rect.x + 18, rect.y + 158, rect.width - 36, 32), "KlaasjeBalconyReal", "balcony", "KlaasjeBalconyReal");
-        GUI.Label(new Rect(rect.x + 18, rect.y + 206, rect.width - 36, 24), "Recent individual state:");
+        var rect = new Rect(24, 54, 520, 500);
+        GUI.Box(rect, "", _panelStyle);
+        if (worldMapTexture != null) GUI.DrawTexture(new Rect(rect.x + 18, rect.y + 18, rect.width - 36, 228), worldMapTexture, ScaleMode.ScaleToFit, true);
+        GUI.Label(new Rect(rect.x + 18, rect.y + 256, rect.width - 36, 42), "Objective: " + RestoredGameState.CurrentObjective(), _smallStyle);
+        DrawMapButton(new Rect(rect.x + 18, rect.y + 308, rect.width - 36, 32), "ROOM 1", "room", "RoomReal");
+        DrawMapButton(new Rect(rect.x + 18, rect.y + 346, rect.width - 36, 32), "WHIRLING-IN-RAGS", "lobby", "WhirlingLobbyReal");
+        DrawMapButton(new Rect(rect.x + 18, rect.y + 384, rect.width - 36, 32), "KLAASJE / BALCONY", "balcony", "KlaasjeBalconyReal");
+        GUI.Label(new Rect(rect.x + 18, rect.y + 426, rect.width - 36, 22), "RECENT STATE", _speakerStyle);
         for (int i = 0; i < RestoredGameState.JournalCapacity; i++)
         {
             string line = RestoredGameState.JournalLine(i);
-            if (!string.IsNullOrEmpty(line)) GUI.Label(new Rect(rect.x + 18, rect.y + 234 + i * 22, rect.width - 36, 20), "- " + line);
+            if (!string.IsNullOrEmpty(line)) GUI.Label(new Rect(rect.x + 18, rect.y + 452 + i * 18, rect.width - 36, 18), "- " + line, _smallStyle);
         }
     }
 
@@ -662,7 +702,7 @@ public class RootWorldController : MonoBehaviour
     {
         bool unlocked = RestoredGameState.IsLocationUnlocked(locationKey);
         GUI.enabled = unlocked;
-        if (GUI.Button(rect, unlocked ? label : label + " (locked)")) LoadSceneIfAvailable(sceneName);
+        if (GUI.Button(rect, unlocked ? label : label + " (LOCKED)", _choiceStyle)) LoadSceneIfAvailable(sceneName);
         GUI.enabled = true;
     }
 
@@ -670,15 +710,18 @@ public class RootWorldController : MonoBehaviour
     {
         float width = Mathf.Min(660f, Screen.width * 0.46f);
         var rect = new Rect(Screen.width - width - 28, 86, width, Screen.height - 172);
-        GUI.Box(rect, "");
-        GUI.Label(new Rect(rect.x + 24, rect.y + 24, rect.width - 48, 26), (_speaker ?? "").ToUpperInvariant());
-        GUI.Label(new Rect(rect.x + 24, rect.y + 62, rect.width - 48, 132), _line ?? "");
+        GUI.Box(rect, "", _panelStyle);
+        Texture2D portrait = ActivePortrait();
+        if (portrait != null) GUI.DrawTexture(new Rect(rect.x + 22, rect.y + 24, 96, 96), portrait, ScaleMode.ScaleToFit, true);
+        float textX = portrait != null ? rect.x + 136 : rect.x + 24;
+        GUI.Label(new Rect(textX, rect.y + 24, rect.width - (textX - rect.x) - 24, 26), (_speaker ?? "").ToUpperInvariant(), _speakerStyle);
+        GUI.Label(new Rect(textX, rect.y + 58, rect.width - (textX - rect.x) - 24, 144), _line ?? "", _lineStyle);
         if (_choices.Count > 0)
         {
             for (int i = 0; i < _choices.Count && i < 9; i++)
             {
                 string text = (i + 1) + ". " + Clean(Field(_choices[i].fields, "Dialogue Text"));
-                if (GUI.Button(new Rect(rect.x + 24, rect.y + 212 + i * 38, rect.width - 48, 30), text)) ChooseDialogue(_choices[i]);
+                if (GUI.Button(new Rect(rect.x + 24, rect.y + 222 + i * 42, rect.width - 48, 34), text, _choiceStyle)) ChooseDialogue(_choices[i]);
             }
         }
         else if (_activeCustomNode != null && _visibleCustomChoices.Count > 0)
@@ -686,10 +729,18 @@ public class RootWorldController : MonoBehaviour
             for (int i = 0; i < _visibleCustomChoices.Count && i < 9; i++)
             {
                 string text = (i + 1) + ". " + _visibleCustomChoices[i].text;
-                if (GUI.Button(new Rect(rect.x + 24, rect.y + 212 + i * 38, rect.width - 48, 30), text)) ChooseCustom(_visibleCustomChoices[i]);
+                if (GUI.Button(new Rect(rect.x + 24, rect.y + 222 + i * 42, rect.width - 48, 34), text, _choiceStyle)) ChooseCustom(_visibleCustomChoices[i]);
             }
         }
-        else GUI.Label(new Rect(rect.x + 24, rect.yMax - 46, rect.width - 48, 24), "E / Space / Enter continues. Esc closes.");
+        else GUI.Label(new Rect(rect.x + 24, rect.yMax - 46, rect.width - 48, 24), "E / Space / Enter continues. Esc closes.", _smallStyle);
+    }
+
+    Texture2D ActivePortrait()
+    {
+        string key = Key(_activeTalkTarget);
+        if (key == "kim") return kimPortrait;
+        if (key == "klaasje") return klaasjePortrait;
+        return null;
     }
 
     void LoadSceneIfAvailable(string sceneName)

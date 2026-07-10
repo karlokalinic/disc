@@ -68,6 +68,9 @@ public static class BuildRootWorld
         controller.playerController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>("Assets/_IntroReal/RecoveredTequilaMovement.controller");
         controller.worldCamera = camera;
         controller.preferCustomDialogue = true;
+        controller.kimPortrait = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Addressables Resources/NPC_portraits/portrait_kitsuragi.png");
+        controller.klaasjePortrait = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Addressables Resources/NPC_portraits/portrait_klaasje.png");
+        controller.worldMapTexture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Resources/lobby/Martinaise-worldmap.png");
 
         AddTrigger("CaseBoardTrigger", "case_board", "Case board updated", new Vector3(-5.2f, 0.08f, 2.4f), new Vector3(1.4f, 0.16f, 1.0f), controller);
         AddTrigger("BalconyLeadTrigger", "balcony_lead", "Balcony lead discovered", new Vector3(4.6f, 0.08f, 2.5f), new Vector3(1.8f, 0.16f, 0.9f), controller);
@@ -120,10 +123,14 @@ public static class BuildRootWorld
             Check(controller.customDialogueJson != null, "custom dialogue JSON assigned", ref failures, Line);
             Check(controller.preferCustomDialogue, "custom dialogue preferred for restored root scene", ref failures, Line);
             Check(controller.playerController != null, "player movement controller assigned", ref failures, Line);
+            Check(controller.kimPortrait != null, "Kim portrait assigned", ref failures, Line);
+            Check(controller.klaasjePortrait != null, "Klaasje portrait assigned", ref failures, Line);
+            Check(controller.worldMapTexture != null, "world map texture assigned", ref failures, Line);
         }
         Check(talkTargets.Length >= 2, "Kim/Klaasje talk targets present: " + talkTargets.Length, ref failures, Line);
         Check(triggers.Length >= 2, "world triggers present: " + triggers.Length, ref failures, Line);
         Check(cameras.Length >= 1, "camera present: " + cameras.Length, ref failures, Line);
+        Check(!HasVisibleGeneratedPlaceholder(), "generated placeholder colliders/markers are invisible", ref failures, Line);
 
         string root = Directory.GetParent(Application.dataPath).FullName;
         File.WriteAllText(Path.Combine(root, "root_world_validation.txt"), "failures=" + failures + "\n" + log);
@@ -140,17 +147,21 @@ public static class BuildRootWorld
         }
     }
 
+    static bool HasVisibleGeneratedPlaceholder()
+    {
+        foreach (var renderer in Object.FindObjectsByType<Renderer>(FindObjectsInactive.Include))
+        {
+            if (renderer == null || !renderer.enabled) continue;
+            string name = renderer.gameObject.name;
+            if (name == "WhirlingRootWalkable" || name.StartsWith("MapMarker_") || name.EndsWith("Trigger")) return true;
+            if (name == "BackWall" || name == "LeftWall" || name == "RightWall" || name == "WhirlingRootFloor") return true;
+        }
+        return false;
+    }
+
     static void BuildWorld(System.Action<string> log)
     {
-        var floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        floor.name = "WhirlingRootFloor";
-        floor.transform.position = new Vector3(0f, -0.08f, 0f);
-        floor.transform.localScale = new Vector3(12f, 0.16f, 8f);
-        floor.GetComponent<Renderer>().sharedMaterial = Lit(FloorColor);
-
-        AddWall("BackWall", new Vector3(0f, 1.55f, 4.1f), new Vector3(12f, 3.1f, 0.18f));
-        AddWall("LeftWall", new Vector3(-6.1f, 1.2f, 0f), new Vector3(0.18f, 2.4f, 8f));
-        AddWall("RightWall", new Vector3(6.1f, 1.2f, 0f), new Vector3(0.18f, 2.4f, 8f));
+        AddInvisibleCollider("WhirlingRootWalkable", new Vector3(0f, -0.08f, 0f), new Vector3(12f, 0.16f, 8f));
 
         var backdropTexture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Texture2D/WhirlingF1.png");
         if (backdropTexture != null)
@@ -158,9 +169,9 @@ public static class BuildRootWorld
             var backdrop = GameObject.CreatePrimitive(PrimitiveType.Quad);
             backdrop.name = "WhirlingPaintedBackdrop";
             Object.DestroyImmediate(backdrop.GetComponent<Collider>());
-            backdrop.transform.position = new Vector3(0f, 2.1f, 4.0f);
-            backdrop.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
-            backdrop.transform.localScale = new Vector3(8.8f, 4.4f, 1f);
+            backdrop.transform.position = new Vector3(0f, 0.015f, 0f);
+            backdrop.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            backdrop.transform.localScale = new Vector3(11.8f, 7.4f, 1f);
             backdrop.GetComponent<Renderer>().sharedMaterial = Unlit(backdropTexture);
             log("backdrop WhirlingF1 loaded");
         }
@@ -180,13 +191,25 @@ public static class BuildRootWorld
         wall.GetComponent<Renderer>().sharedMaterial = Lit(WallColor);
     }
 
+    static void AddInvisibleCollider(string name, Vector3 position, Vector3 scale)
+    {
+        var colliderObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        colliderObject.name = name;
+        colliderObject.transform.position = position;
+        colliderObject.transform.localScale = scale;
+        var renderer = colliderObject.GetComponent<Renderer>();
+        if (renderer != null) renderer.enabled = false;
+    }
+
     static void AddMapMarker(string name, Vector3 position, Color color)
     {
         var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
         marker.name = "MapMarker_" + name;
         marker.transform.position = position;
         marker.transform.localScale = new Vector3(1.6f, 0.06f, 0.72f);
-        marker.GetComponent<Renderer>().sharedMaterial = Lit(color);
+        var renderer = marker.GetComponent<Renderer>();
+        renderer.sharedMaterial = Lit(color);
+        renderer.enabled = false;
     }
 
     static GameObject InstantiatePrefab(string path, string name, Vector3 position, float scale, System.Action<string> log)
@@ -262,7 +285,9 @@ public static class BuildRootWorld
         trigger.name = name;
         trigger.transform.position = position;
         trigger.transform.localScale = scale;
-        trigger.GetComponent<Renderer>().sharedMaterial = Lit(new Color(0.55f, 0.42f, 0.18f));
+        var renderer = trigger.GetComponent<Renderer>();
+        renderer.sharedMaterial = Lit(new Color(0.55f, 0.42f, 0.18f));
+        renderer.enabled = false;
         var collider = trigger.GetComponent<BoxCollider>();
         collider.isTrigger = true;
         var rootTrigger = trigger.AddComponent<RootWorldTrigger>();
