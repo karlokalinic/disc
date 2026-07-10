@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/_IntroReal/RootWorldReal.unity
+    guid: a410b38d6b56fa34aa427ed8c43283ca
+  - enabled: 1
     path: Assets/_IntroReal/BootBlank.unity
     guid: e17a0000000000000000000000000006
   - enabled: 0

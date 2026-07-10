@@ -1,0 +1,36 @@
+{
+  "conversations": [
+    {
+      "targetKey": "kim",
+      "nodes": [
+        {
+          "id": "start",
+          "speaker": "Kim Kitsuragi",
+          "text": "The lieutenant waits for you to choose the next lead.",
+          "choices": [
+            { "text": "Ask him to follow your lead.", "next": "follow", "flag": "kim_follow" },
+            { "text": "Ask about the map.", "next": "map", "flag": "kim_map" }
+          ]
+        },
+        { "id": "follow", "speaker": "Kim Kitsuragi", "text": "He nods once. The investigation continues.", "choices": [] },
+        { "id": "map", "speaker": "Kim Kitsuragi", "text": "He marks the Whirling, the balcony, and your room as active points of interest.", "choices": [] }
+      ]
+    },
+    {
+      "targetKey": "klaasje",
+      "nodes": [
+        {
+          "id": "start",
+          "speaker": "Klaasje",
+          "text": "She watches the room from the window, cigarette smoke hanging in the air.",
+          "choices": [
+            { "text": "Ask what she saw.", "next": "saw", "flag": "klaasje_saw" },
+            { "text": "Ask about the missing shoe.", "next": "shoe", "flag": "klaasje_shoe" }
+          ]
+        },
+        { "id": "saw", "speaker": "Klaasje", "text": "She gives you enough to keep moving, but not enough to trust her completely.", "choices": [] },
+        { "id": "shoe", "speaker": "Klaasje", "text": "The balcony becomes a lead. Check it from the world map when you are ready.", "choices": [] }
+      ]
+    }
+  ]
+}

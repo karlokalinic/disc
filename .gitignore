@@ -43,6 +43,8 @@ Assets/**
 !Assets/_IntroReal/**/*.controller.meta
 !Assets/_IntroReal/**/*.unity
 !Assets/_IntroReal/**/*.unity.meta
+!Assets/_IntroReal/**/*.json
+!Assets/_IntroReal/**/*.json.meta
 !Assets/csc.rsp
 !Assets/csc.rsp.meta
 

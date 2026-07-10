@@ -1,0 +1,667 @@
+using System.Collections.Generic;
+using PixelCrushers.DialogueSystem;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
+
+public class RootWorldController : MonoBehaviour
+{
+    public DialogueDatabase database;
+    public TextAsset customDialogueJson;
+    public Transform player;
+    public Transform kim;
+    public Transform klaasje;
+    public RuntimeAnimatorController playerController;
+    public Camera worldCamera;
+    public bool preferCustomDialogue;
+
+    CharacterController _controller;
+    Animator _animator;
+    bool _animHasForward;
+    float _animForward;
+    bool _hasWalkTarget;
+    Vector3 _walkTarget;
+    Vector3 _lastMove = Vector3.forward;
+    readonly Dictionary<int, string> _actorNames = new Dictionary<int, string>();
+    readonly HashSet<int> _playerActors = new HashSet<int>();
+    readonly List<DialogueEntry> _choices = new List<DialogueEntry>();
+    readonly List<string> _journal = new List<string>();
+    readonly Dictionary<string, CustomConversation> _customConversations = new Dictionary<string, CustomConversation>();
+    DialogueEntry _activeEntry;
+    Conversation _activeConversation;
+    CustomConversation _activeCustomConversation;
+    CustomNode _activeCustomNode;
+    RootWorldTalkTarget _pendingTalkTarget;
+    RootWorldTalkTarget _activeTalkTarget;
+    bool _dialogueOpen;
+    bool _mapOpen;
+    bool _databaseReady;
+    string _speaker = "";
+    string _line = "";
+    string _hint = "Click the floor to walk. Hold Shift to run. Click Kim or Klaasje to talk. Press M for the world map.";
+
+    const float WalkSpeed = 3.2f;
+    const float RunSpeed = 5.6f;
+    const float ArriveDistance = 0.18f;
+    const float TalkDistance = 2.25f;
+
+    [System.Serializable]
+    class CustomDialogueBook
+    {
+        public CustomConversation[] conversations;
+    }
+
+    [System.Serializable]
+    class CustomConversation
+    {
+        public string targetKey;
+        public CustomNode[] nodes;
+    }
+
+    [System.Serializable]
+    class CustomNode
+    {
+        public string id;
+        public string speaker;
+        public string text;
+        public CustomChoice[] choices;
+    }
+
+    [System.Serializable]
+    class CustomChoice
+    {
+        public string text;
+        public string next;
+        public string flag;
+    }
+
+    void Start()
+    {
+        SetupPlayer();
+        SetupCamera();
+        LoadCustomDialogue();
+        EnsureDatabaseReady();
+        RegisterVisit("root_world");
+    }
+
+    void SetupPlayer()
+    {
+        if (player == null) return;
+        player.gameObject.tag = "Player";
+        _controller = player.GetComponent<CharacterController>();
+        if (_controller == null) _controller = player.gameObject.AddComponent<CharacterController>();
+        _controller.height = 1.85f;
+        _controller.radius = 0.34f;
+        _controller.center = new Vector3(0f, 0.92f, 0f);
+
+        foreach (var cloth in player.GetComponentsInChildren<Cloth>(true)) cloth.enabled = false;
+        _animator = player.GetComponent<Animator>();
+        if (_animator == null) _animator = player.gameObject.AddComponent<Animator>();
+        _animator.avatar = null;
+        _animator.applyRootMotion = false;
+        _animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+        if (playerController != null) _animator.runtimeAnimatorController = playerController;
+        _animator.enabled = _animator.runtimeAnimatorController != null;
+        _animHasForward = false;
+        if (_animator.enabled)
+        {
+            foreach (var parameter in _animator.parameters)
+            {
+                if (parameter.name == "Forward" && parameter.type == AnimatorControllerParameterType.Float)
+                {
+                    _animHasForward = true;
+                    break;
+                }
+            }
+            if (_animHasForward) _animator.Play("Player Movement", 0, 0f);
+        }
+    }
+
+    void SetupCamera()
+    {
+        if (worldCamera == null) worldCamera = Camera.main;
+        if (worldCamera == null)
+        {
+            var cameraObject = new GameObject("RootWorldCamera");
+            worldCamera = cameraObject.AddComponent<Camera>();
+            cameraObject.AddComponent<AudioListener>();
+        }
+        worldCamera.tag = "MainCamera";
+        worldCamera.orthographic = true;
+        worldCamera.orthographicSize = 6.2f;
+        worldCamera.nearClipPlane = 0.05f;
+        worldCamera.farClipPlane = 120f;
+        worldCamera.clearFlags = CameraClearFlags.SolidColor;
+        worldCamera.backgroundColor = new Color(0.025f, 0.026f, 0.027f);
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+        RenderSettings.ambientLight = new Color(0.74f, 0.70f, 0.62f);
+    }
+
+    void LoadCustomDialogue()
+    {
+        _customConversations.Clear();
+        if (customDialogueJson == null || string.IsNullOrEmpty(customDialogueJson.text)) return;
+        var book = JsonUtility.FromJson<CustomDialogueBook>(customDialogueJson.text);
+        if (book == null || book.conversations == null) return;
+        foreach (var conversation in book.conversations)
+        {
+            if (conversation == null || string.IsNullOrEmpty(conversation.targetKey)) continue;
+            _customConversations[conversation.targetKey.ToLowerInvariant()] = conversation;
+        }
+    }
+
+    void Update()
+    {
+        if (worldCamera == null || player == null) return;
+        if (Input.GetKeyDown(KeyCode.M)) _mapOpen = !_mapOpen;
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (_dialogueOpen) CloseDialogue();
+            else if (_mapOpen) _mapOpen = false;
+        }
+
+        if (_dialogueOpen)
+        {
+            UpdateDialogueInput();
+            UpdateCamera();
+            UpdateAnimator(0f);
+            return;
+        }
+
+        ReadClick();
+        UpdateMovement();
+        UpdateCamera();
+        UpdateNearbyPrompt();
+    }
+
+    void ReadClick()
+    {
+        if (!Input.GetMouseButtonDown(0) || _mapOpen) return;
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
+        Ray ray = worldCamera.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out RaycastHit hit, 200f, ~0, QueryTriggerInteraction.Ignore))
+        {
+            var talkTarget = hit.collider.GetComponentInParent<RootWorldTalkTarget>();
+            if (talkTarget != null)
+            {
+                _pendingTalkTarget = talkTarget;
+                _walkTarget = TalkApproachPoint(talkTarget.transform);
+                _hasWalkTarget = true;
+                return;
+            }
+            _pendingTalkTarget = null;
+            _walkTarget = hit.point;
+            _walkTarget.y = player.position.y;
+            _hasWalkTarget = true;
+        }
+    }
+
+    Vector3 TalkApproachPoint(Transform target)
+    {
+        Vector3 direction = player.position - target.position;
+        direction.y = 0f;
+        if (direction.sqrMagnitude < 0.01f) direction = -target.forward;
+        return target.position + direction.normalized * 1.35f;
+    }
+
+    void UpdateMovement()
+    {
+        Vector3 input = ReadMoveInput();
+        bool running = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+        if (input.sqrMagnitude > 0.001f)
+        {
+            _hasWalkTarget = false;
+            _pendingTalkTarget = null;
+        }
+        else if (_hasWalkTarget)
+        {
+            Vector3 toTarget = _walkTarget - player.position;
+            toTarget.y = 0f;
+            if (toTarget.magnitude <= ArriveDistance)
+            {
+                _hasWalkTarget = false;
+                input = Vector3.zero;
+                if (_pendingTalkTarget != null && IsCloseEnoughToTalk(_pendingTalkTarget)) StartConversation(_pendingTalkTarget);
+                _pendingTalkTarget = null;
+            }
+            else input = toTarget.normalized;
+        }
+
+        if (input.sqrMagnitude > 0.001f)
+        {
+            input.Normalize();
+            _lastMove = input;
+            float speed = running ? RunSpeed : WalkSpeed;
+            if (_controller != null) _controller.Move(input * speed * Time.deltaTime);
+            else player.position += input * speed * Time.deltaTime;
+            player.rotation = Quaternion.Slerp(player.rotation, Quaternion.LookRotation(input, Vector3.up), Time.deltaTime * 10f);
+        }
+        UpdateAnimator(input.sqrMagnitude > 0.001f ? (running ? 2f : 1f) : 0f);
+    }
+
+    Vector3 ReadMoveInput()
+    {
+        Vector3 forward = Vector3.ProjectOnPlane(worldCamera.transform.forward, Vector3.up).normalized;
+        Vector3 right = Vector3.ProjectOnPlane(worldCamera.transform.right, Vector3.up).normalized;
+        Vector3 input = Vector3.zero;
+        if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) input += forward;
+        if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) input -= forward;
+        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) input += right;
+        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) input -= right;
+        return Vector3.ClampMagnitude(input, 1f);
+    }
+
+    void UpdateCamera()
+    {
+        Vector3 focus = player.position + Vector3.up * 1.2f;
+        worldCamera.transform.position = Vector3.Lerp(worldCamera.transform.position, focus + new Vector3(0f, 9.2f, -9.4f), Time.deltaTime * 6f);
+        worldCamera.transform.rotation = Quaternion.Slerp(worldCamera.transform.rotation, Quaternion.Euler(47f, 0f, 0f), Time.deltaTime * 8f);
+    }
+
+    void UpdateAnimator(float targetForward)
+    {
+        if (_animator == null || !_animator.enabled || !_animHasForward) return;
+        _animForward = Mathf.MoveTowards(_animForward, targetForward, Time.deltaTime * 5f);
+        _animator.SetFloat("Forward", _animForward);
+    }
+
+    void UpdateNearbyPrompt()
+    {
+        RootWorldTalkTarget nearest = null;
+        float best = TalkDistance;
+        foreach (var target in FindObjectsByType<RootWorldTalkTarget>(FindObjectsInactive.Exclude))
+        {
+            float distance = Vector3.Distance(player.position, target.transform.position);
+            if (distance < best)
+            {
+                best = distance;
+                nearest = target;
+            }
+        }
+        if (nearest != null)
+        {
+            _hint = "Click " + DisplayName(nearest) + " or press E to talk. Hold Shift to run. Press M for the world map.";
+            if (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.Space)) StartConversation(nearest);
+        }
+        else _hint = "Click the floor to walk. Hold Shift to run. Click Kim or Klaasje to talk. Press M for the world map.";
+    }
+
+    bool IsCloseEnoughToTalk(RootWorldTalkTarget target)
+    {
+        return target != null && Vector3.Distance(player.position, target.transform.position) <= TalkDistance + 0.5f;
+    }
+
+    void StartConversation(RootWorldTalkTarget target)
+    {
+        if (target == null) return;
+        _activeTalkTarget = target;
+        _dialogueOpen = true;
+        _mapOpen = false;
+        _choices.Clear();
+        _activeEntry = null;
+        _activeConversation = null;
+        _activeCustomConversation = null;
+        _activeCustomNode = null;
+        RegisterVisit("talk_" + Key(target));
+
+        _activeCustomConversation = FindCustomConversation(target);
+        if (!preferCustomDialogue)
+            _activeConversation = FindDatabaseConversation(target);
+
+        if (_activeConversation != null && _activeConversation.dialogueEntries != null && _activeConversation.dialogueEntries.Count > 0)
+        {
+            DialogueEntry start = null;
+            foreach (var entry in _activeConversation.dialogueEntries)
+            {
+                if (entry.id == 0 || entry.isRoot)
+                {
+                    start = entry;
+                    break;
+                }
+            }
+            FollowDialogue(start ?? _activeConversation.dialogueEntries[0]);
+            return;
+        }
+
+        if (_activeCustomConversation != null)
+        {
+            ShowCustomNode("start");
+            return;
+        }
+
+        _speaker = DisplayName(target);
+        _line = "They are ready to talk, but no conversation binding was found yet.";
+    }
+
+    Conversation FindDatabaseConversation(RootWorldTalkTarget target)
+    {
+        EnsureDatabaseReady();
+        if (database == null) return null;
+        string key = Key(target);
+        string display = DisplayName(target).ToLowerInvariant();
+        Conversation best = null;
+        int bestScore = 0;
+        foreach (var conversation in database.conversations)
+        {
+            string title = (Field(conversation.fields, "Title") ?? "").ToLowerInvariant();
+            int score = 0;
+            if (title.Contains(key)) score += 10;
+            if (!string.IsNullOrEmpty(display) && title.Contains(display)) score += 10;
+            if (key == "kim" && title.Contains("kitsuragi")) score += 8;
+            if (key == "klaasje" && title.Contains("oranje")) score += 4;
+            if (title.Contains("whirling")) score += 2;
+            if (title.Contains("balcony") || title.Contains("roof")) score += key == "klaasje" ? 3 : 0;
+            if (score > bestScore)
+            {
+                bestScore = score;
+                best = conversation;
+            }
+        }
+        return bestScore >= 8 ? best : null;
+    }
+
+    CustomConversation FindCustomConversation(RootWorldTalkTarget target)
+    {
+        if (target == null) return null;
+        _customConversations.TryGetValue(Key(target), out var conversation);
+        return conversation;
+    }
+
+    void EnsureDatabaseReady()
+    {
+        if (_databaseReady || database == null) return;
+        _databaseReady = true;
+        _actorNames.Clear();
+        _playerActors.Clear();
+        foreach (var actor in database.actors)
+        {
+            string name = Field(actor.fields, "Name");
+            _actorNames[actor.id] = string.IsNullOrEmpty(name) ? "Actor " + actor.id : name;
+            string isPlayer = Field(actor.fields, "IsPlayer");
+            if (!string.IsNullOrEmpty(isPlayer) && isPlayer.Trim().Equals("True", System.StringComparison.OrdinalIgnoreCase)) _playerActors.Add(actor.id);
+        }
+    }
+
+    void UpdateDialogueInput()
+    {
+        for (int i = 0; i < _choices.Count && i < 9; i++)
+        {
+            if (Input.GetKeyDown(KeyCode.Alpha1 + i))
+            {
+                ChooseDialogue(_choices[i]);
+                return;
+            }
+        }
+        if (_activeCustomNode != null && _activeCustomNode.choices != null)
+        {
+            for (int i = 0; i < _activeCustomNode.choices.Length && i < 9; i++)
+            {
+                if (Input.GetKeyDown(KeyCode.Alpha1 + i))
+                {
+                    ChooseCustom(_activeCustomNode.choices[i]);
+                    return;
+                }
+            }
+        }
+        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.E))
+        {
+            if (_activeEntry != null) FollowDialogue(_activeEntry);
+            else CloseDialogue();
+        }
+    }
+
+    void FollowDialogue(DialogueEntry from)
+    {
+        if (from == null)
+        {
+            CloseDialogue();
+            return;
+        }
+        ApplyScript(Field(from.fields, "userScript"));
+        var next = ResolveLinks(from);
+        _choices.Clear();
+        DialogueEntry line = null;
+        foreach (var entry in next)
+        {
+            if (_playerActors.Contains(ActorId(entry))) _choices.Add(entry);
+            else if (line == null) line = entry;
+        }
+        if (_choices.Count > 0)
+        {
+            _speaker = "YOU";
+            _line = "Choose.";
+            _activeEntry = null;
+            return;
+        }
+        if (line != null)
+        {
+            ShowDialogueLine(line);
+            return;
+        }
+        CloseDialogue();
+    }
+
+    List<DialogueEntry> ResolveLinks(DialogueEntry from)
+    {
+        var list = new List<DialogueEntry>();
+        if (from == null || from.outgoingLinks == null || _activeConversation == null) return list;
+        foreach (var link in from.outgoingLinks)
+        {
+            if (link.destinationConversationID != _activeConversation.id) continue;
+            foreach (var entry in _activeConversation.dialogueEntries)
+            {
+                if (entry.id == link.destinationDialogueID)
+                {
+                    list.Add(entry);
+                    break;
+                }
+            }
+        }
+        return list;
+    }
+
+    void ShowDialogueLine(DialogueEntry entry)
+    {
+        _activeEntry = entry;
+        _actorNames.TryGetValue(ActorId(entry), out _speaker);
+        if (string.IsNullOrEmpty(_speaker)) _speaker = DisplayName(_activeTalkTarget);
+        _line = Clean(Field(entry.fields, "Dialogue Text"));
+        if (string.IsNullOrEmpty(_line)) FollowDialogue(entry);
+    }
+
+    void ChooseDialogue(DialogueEntry entry)
+    {
+        _choices.Clear();
+        _speaker = "YOU";
+        _line = Clean(Field(entry.fields, "Dialogue Text"));
+        ApplyScript(Field(entry.fields, "userScript"));
+        PlayerPrefs.SetInt("rootworld.choice." + Key(_activeTalkTarget) + "." + entry.id, 1);
+        PlayerPrefs.Save();
+        _activeEntry = entry;
+    }
+
+    void ShowCustomNode(string nodeId)
+    {
+        if (_activeCustomConversation == null || _activeCustomConversation.nodes == null)
+        {
+            CloseDialogue();
+            return;
+        }
+        foreach (var node in _activeCustomConversation.nodes)
+        {
+            if (node != null && node.id == nodeId)
+            {
+                _activeCustomNode = node;
+                _speaker = string.IsNullOrEmpty(node.speaker) ? DisplayName(_activeTalkTarget) : node.speaker;
+                _line = node.text ?? "";
+                return;
+            }
+        }
+        CloseDialogue();
+    }
+
+    void ChooseCustom(CustomChoice choice)
+    {
+        if (choice == null) return;
+        if (!string.IsNullOrEmpty(choice.flag))
+        {
+            string flag = "rootworld.custom." + Key(_activeTalkTarget) + "." + choice.flag;
+            PlayerPrefs.SetInt(flag, 1);
+            PlayerPrefs.Save();
+            Remember(flag);
+        }
+        ShowCustomNode(choice.next);
+    }
+
+    void CloseDialogue()
+    {
+        _dialogueOpen = false;
+        _choices.Clear();
+        _activeEntry = null;
+        _activeConversation = null;
+        _activeCustomConversation = null;
+        _activeCustomNode = null;
+        _activeTalkTarget = null;
+    }
+
+    public void RegisterWorldTrigger(string triggerKey, string displayName)
+    {
+        string key = string.IsNullOrEmpty(triggerKey) ? "trigger" : triggerKey;
+        PlayerPrefs.SetInt("rootworld.trigger." + key, 1);
+        PlayerPrefs.Save();
+        string label = string.IsNullOrEmpty(displayName) ? key : displayName;
+        Remember("Trigger: " + label);
+        _hint = label + " added to the case journal. Press M for the world map.";
+    }
+
+    void RegisterVisit(string key)
+    {
+        string pref = "rootworld.visit." + key;
+        PlayerPrefs.SetInt(pref, PlayerPrefs.GetInt(pref, 0) + 1);
+        PlayerPrefs.Save();
+    }
+
+    void Remember(string line)
+    {
+        if (string.IsNullOrEmpty(line)) return;
+        _journal.Insert(0, line);
+        while (_journal.Count > 6) _journal.RemoveAt(_journal.Count - 1);
+    }
+
+    void ApplyScript(string script)
+    {
+        if (string.IsNullOrEmpty(script)) return;
+        int index = script.IndexOf("SetVariableValue(\"", System.StringComparison.Ordinal);
+        if (index < 0) index = script.IndexOf("XPTinySetBool(\"", System.StringComparison.Ordinal);
+        if (index < 0) return;
+        int start = script.IndexOf('"', index) + 1;
+        int end = script.IndexOf('"', start);
+        if (start <= 0 || end <= start) return;
+        string key = script.Substring(start, end - start);
+        PlayerPrefs.SetInt("dialogue." + key, 1);
+        PlayerPrefs.Save();
+        Remember("Dialogue flag: " + key);
+    }
+
+    void OnGUI()
+    {
+        DrawHint();
+        if (_mapOpen) DrawWorldMap();
+        if (_dialogueOpen) DrawDialogue();
+    }
+
+    void DrawHint()
+    {
+        GUI.Box(new Rect(20, Screen.height - 72, Screen.width - 40, 44), "");
+        GUI.Label(new Rect(36, Screen.height - 60, Screen.width - 72, 24), _hint);
+    }
+
+    void DrawWorldMap()
+    {
+        var rect = new Rect(24, 72, 360, 390);
+        GUI.Box(rect, "WORLD MAP");
+        GUI.Label(new Rect(rect.x + 18, rect.y + 36, rect.width - 36, 24), "Root scene: Whirling hub reconstruction");
+        if (GUI.Button(new Rect(rect.x + 18, rect.y + 74, rect.width - 36, 32), "RoomReal")) LoadSceneIfAvailable("RoomReal");
+        if (GUI.Button(new Rect(rect.x + 18, rect.y + 112, rect.width - 36, 32), "WhirlingLobbyReal")) LoadSceneIfAvailable("WhirlingLobbyReal");
+        if (GUI.Button(new Rect(rect.x + 18, rect.y + 150, rect.width - 36, 32), "KlaasjeBalconyReal")) LoadSceneIfAvailable("KlaasjeBalconyReal");
+        GUI.Label(new Rect(rect.x + 18, rect.y + 198, rect.width - 36, 24), "Recent individual state:");
+        for (int i = 0; i < _journal.Count; i++) GUI.Label(new Rect(rect.x + 18, rect.y + 226 + i * 24, rect.width - 36, 22), "- " + _journal[i]);
+    }
+
+    void DrawDialogue()
+    {
+        float width = Mathf.Min(660f, Screen.width * 0.46f);
+        var rect = new Rect(Screen.width - width - 28, 86, width, Screen.height - 172);
+        GUI.Box(rect, "");
+        GUI.Label(new Rect(rect.x + 24, rect.y + 24, rect.width - 48, 26), (_speaker ?? "").ToUpperInvariant());
+        GUI.Label(new Rect(rect.x + 24, rect.y + 62, rect.width - 48, 132), _line ?? "");
+        if (_choices.Count > 0)
+        {
+            for (int i = 0; i < _choices.Count && i < 9; i++)
+            {
+                string text = (i + 1) + ". " + Clean(Field(_choices[i].fields, "Dialogue Text"));
+                if (GUI.Button(new Rect(rect.x + 24, rect.y + 212 + i * 38, rect.width - 48, 30), text)) ChooseDialogue(_choices[i]);
+            }
+        }
+        else if (_activeCustomNode != null && _activeCustomNode.choices != null && _activeCustomNode.choices.Length > 0)
+        {
+            for (int i = 0; i < _activeCustomNode.choices.Length && i < 9; i++)
+            {
+                string text = (i + 1) + ". " + _activeCustomNode.choices[i].text;
+                if (GUI.Button(new Rect(rect.x + 24, rect.y + 212 + i * 38, rect.width - 48, 30), text)) ChooseCustom(_activeCustomNode.choices[i]);
+            }
+        }
+        else GUI.Label(new Rect(rect.x + 24, rect.yMax - 46, rect.width - 48, 24), "E / Space / Enter continues. Esc closes.");
+    }
+
+    void LoadSceneIfAvailable(string sceneName)
+    {
+        if (Application.CanStreamedLevelBeLoaded(sceneName)) SceneManager.LoadScene(sceneName);
+        else _hint = sceneName + " is not in build settings yet.";
+    }
+
+    static string Field(List<Field> fields, string title)
+    {
+        if (fields == null) return null;
+        foreach (var field in fields) if (field != null && field.title == title) return field.value;
+        return null;
+    }
+
+    static int ActorId(DialogueEntry entry)
+    {
+        int.TryParse(Field(entry.fields, "Actor"), out int actorId);
+        return actorId;
+    }
+
+    static string Clean(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return "";
+        while (true)
+        {
+            int start = text.IndexOf('[');
+            int end = start >= 0 ? text.IndexOf(']', start) : -1;
+            if (start < 0 || end < 0) break;
+            text = text.Remove(start, end - start + 1);
+        }
+        while (true)
+        {
+            int start = text.IndexOf('<');
+            int end = start >= 0 ? text.IndexOf('>', start) : -1;
+            if (start < 0 || end < 0) break;
+            text = text.Remove(start, end - start + 1);
+        }
+        return text.Trim();
+    }
+
+    static string Key(RootWorldTalkTarget target)
+    {
+        if (target == null || string.IsNullOrEmpty(target.targetKey)) return "target";
+        return target.targetKey.ToLowerInvariant();
+    }
+
+    static string DisplayName(RootWorldTalkTarget target)
+    {
+        if (target == null) return "Unknown";
+        return string.IsNullOrEmpty(target.displayName) ? target.name : target.displayName;
+    }
+}
